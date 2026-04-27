@@ -18,6 +18,63 @@
       color: #111827;
     }
 
+    /* ── Auth Screen ── */
+    #authScreen {
+      position: fixed; inset: 0; z-index: 200;
+      background: #f8f9fc;
+      display: flex; align-items: center; justify-content: center;
+    }
+    #authScreen.hidden { display: none; }
+    .auth-box {
+      background: #fff; border-radius: 16px; padding: 36px 40px;
+      width: 400px; max-width: 95vw;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+    }
+    .auth-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+    .auth-logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: 10px; display: flex; align-items: center;
+      justify-content: center; font-size: 18px;
+    }
+    .auth-logo-text { font-size: 18px; font-weight: 700; color: #111827; }
+    .auth-logo-sub  { font-size: 12px; color: #9ca3af; margin-top: 2px; }
+    .auth-title { font-size: 20px; font-weight: 700; color: #111827; margin-bottom: 6px; }
+    .auth-sub   { font-size: 13px; color: #6b7280; margin-bottom: 24px; }
+    .auth-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
+    .auth-row label { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+    .auth-row input {
+      padding: 10px 13px; border: 1px solid #e5e7eb; border-radius: 8px;
+      font-size: 13px; color: #111827; outline: none; transition: border-color 0.15s;
+    }
+    .auth-row input:focus { border-color: #6366f1; }
+    .auth-btn {
+      width: 100%; padding: 11px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff; border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: opacity 0.15s; margin-top: 6px;
+    }
+    .auth-btn:hover { opacity: 0.9; }
+    .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .auth-toggle {
+      text-align: center; margin-top: 16px; font-size: 13px; color: #6b7280;
+    }
+    .auth-toggle a { color: #6366f1; cursor: pointer; font-weight: 500; text-decoration: none; }
+    .auth-toggle a:hover { text-decoration: underline; }
+    .auth-error {
+      color: #dc2626; font-size: 12px; margin-bottom: 12px;
+      background: #fee2e2; padding: 8px 12px; border-radius: 6px;
+      display: none;
+    }
+    .auth-error.show { display: block; }
+
+    /* ── App wrapper ── */
+    #appWrapper {
+      display: flex; width: 100%; height: 100%;
+    }
+    #appWrapper.hidden { display: none; }
+
     /* ── Sidebar ── */
     .sidebar {
       width: 300px; min-width: 300px;
@@ -63,27 +120,24 @@
     .chart-block.countries-block { height: 260px; }
     .chart-block.countries-block canvas { max-height: 260px; }
 
+    /* User info in sidebar */
+    .user-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 10px; background: #f9fafb; border: 1px solid #e5e7eb;
+      border-radius: 8px;
+    }
+    .user-email { font-size: 11px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .logout-btn {
+      font-size: 11px; color: #6366f1; background: none; border: none;
+      cursor: pointer; font-weight: 500; flex-shrink: 0; padding-left: 8px;
+    }
+    .logout-btn:hover { text-decoration: underline; }
+
     /* ── Main ── */
     .main {
       flex: 1; display: flex; flex-direction: column;
       overflow: hidden; position: relative;
     }
-
-    /* Topbar */
-    .topbar {
-      padding: 10px 24px; border-bottom: 1px solid #e5e7eb;
-      display: flex; align-items: center; justify-content: space-between;
-      background: #fff; flex-shrink: 0;
-    }
-    .topbar-title { font-size: 15px; font-weight: 600; color: #111827; }
-    .topbar-sub   { font-size: 12px; color: #9ca3af; margin-top: 2px; }
-    .status-dot { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6b7280; }
-    .dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: #10b981; box-shadow: 0 0 6px #10b981;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
     /* Applications list */
     .list-area {
@@ -143,30 +197,6 @@
       opacity: 0; pointer-events: none;
       transform: translateY(6px);
     }
-    .chat-close-float {
-      position: absolute; top: 12px; right: 12px; z-index: 30;
-      width: 28px; height: 28px; border-radius: 6px;
-      border: 1px solid #e5e7eb; background: #fff;
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      font-size: 13px; color: #6b7280;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-      transition: background 0.15s;
-    }
-    .chat-close-float:hover { background: #f3f4f6; }
-
-    .chat-header {
-      padding: 0 16px; height: 44px; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid #e5e7eb; background: #fff;
-    }
-    .chat-header-left { font-size: 13px; font-weight: 600; color: #111827; }
-    .chat-close-btn {
-      width: 24px; height: 24px; border-radius: 5px;
-      border: none; background: transparent; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; color: #9ca3af; transition: color 0.15s, background 0.15s;
-    }
-    .chat-close-btn:hover { background: #f3f4f6; color: #6b7280; }
 
     .chat-iframe-wrap { flex: 1; overflow: hidden; }
     .chat-iframe-wrap iframe { width: 100%; height: 100%; border: none; }
@@ -218,80 +248,118 @@
 </head>
 <body>
 
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="logo">
-      <div class="logo-icon">🔍</div>
+  <!-- Auth Screen -->
+  <div id="authScreen">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <div class="auth-logo-icon">🔍</div>
+        <div>
+          <div class="auth-logo-text">JobTrack AI</div>
+          <div class="auth-logo-sub">Powered by DeepSeek + Dify</div>
+        </div>
+      </div>
+      <div id="authTitle" class="auth-title">登录账号</div>
+      <div id="authSub" class="auth-sub">继续追踪你的求职进度</div>
+      <div class="auth-error" id="authError"></div>
+      <div class="auth-row">
+        <label>邮箱</label>
+        <input id="authEmail" type="email" placeholder="your@email.com" autocomplete="email">
+      </div>
+      <div class="auth-row">
+        <label>密码</label>
+        <input id="authPassword" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="auth-btn" id="authBtn" onclick="submitAuth()">登录</button>
+      <div class="auth-toggle">
+        <span id="authToggleText">还没有账号？</span>
+        <a onclick="toggleAuthMode()"><span id="authToggleLink">立即注册</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App -->
+  <div id="appWrapper" class="hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">🔍</div>
+        <div>
+          <div class="logo-text">JobTrack AI</div>
+          <div class="logo-sub">Powered by DeepSeek + Dify</div>
+        </div>
+      </div>
+
+      <div class="user-row">
+        <span class="user-email" id="userEmail">—</span>
+        <button class="logout-btn" onclick="logout()">退出</button>
+      </div>
+
+      <button class="add-btn" onclick="toggleChat()">💬 Ask AI</button>
+
+      <div class="divider"></div>
+
       <div>
-        <div class="logo-text">JobTrack AI</div>
-        <div class="logo-sub">Powered by DeepSeek + Dify</div>
-      </div>
-    </div>
-
-    <button class="add-btn" onclick="toggleChat()">💬 Ask AI</button>
-
-    <div class="divider"></div>
-
-    <div>
-      <div class="section-title">Overview</div>
-      <div class="stat-row">
-        <div class="stat-card">
-          <div class="stat-value" id="val-total">—</div>
-          <div class="stat-label">Applications</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="val-countries">—</div>
-          <div class="stat-label">Countries</div>
+        <div class="section-title">Overview</div>
+        <div class="stat-row">
+          <div class="stat-card">
+            <div class="stat-value" id="val-total">—</div>
+            <div class="stat-label">Applications</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="val-countries">—</div>
+            <div class="stat-label">Countries</div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="divider"></div>
+      <div class="divider"></div>
 
-    <div>
-      <div class="section-title">Work Type</div>
-      <div class="chart-block"><canvas id="chartWorktype"></canvas></div>
-    </div>
-
-    <div>
-      <div class="section-title">Top Countries</div>
-      <div class="chart-block countries-block"><canvas id="chartCountries"></canvas></div>
-    </div>
-
-  </aside>
-
-  <!-- Main -->
-  <main class="main">
-    <!-- List header -->
-    <div style="padding:14px 24px 0;flex-shrink:0;">
-      <button class="ask-ai-btn" onclick="openModal()">+ 新增申请记录</button>
-    </div>
-
-    <!-- Table header -->
-    <div class="list-header">
-      <span style="flex:2">公司</span>
-      <span style="flex:2">职位</span>
-      <span style="flex:1">地点</span>
-      <span style="flex:1">工作类型</span>
-      <span style="flex:1">链接</span>
-      <span style="flex:1">申请时间</span>
-      <span style="flex:1">反馈</span>
-    </div>
-
-    <!-- Applications list -->
-    <div class="list-area" id="listArea">
-      <div style="color:#9ca3af;font-size:13px;text-align:center;padding:40px 0;">加载中...</div>
-    </div>
-
-    <!-- Chat overlay -->
-    <aside class="chat-sidebar hidden" id="chatSidebar">
-      <div class="chat-iframe-wrap">
-        <iframe id="chatIframe" src="http://localhost/chatbot/aPeOSTemhgI3UTkK" allow="microphone"></iframe>
+      <div>
+        <div class="section-title">Work Type</div>
+        <div class="chart-block"><canvas id="chartWorktype"></canvas></div>
       </div>
+
+      <div>
+        <div class="section-title">Top Countries</div>
+        <div class="chart-block countries-block"><canvas id="chartCountries"></canvas></div>
+      </div>
+
     </aside>
-  </main>
 
-  <!-- Modal -->
+    <!-- Main -->
+    <main class="main">
+      <div style="padding:14px 24px 0;flex-shrink:0;">
+        <button class="ask-ai-btn" onclick="openModal()">+ 新增申请记录</button>
+      </div>
+
+      <!-- Table header -->
+      <div class="list-header">
+        <span style="flex:2">公司</span>
+        <span style="flex:2">职位</span>
+        <span style="flex:1">地点</span>
+        <span style="flex:1">工作类型</span>
+        <span style="flex:1">链接</span>
+        <span style="flex:1">申请时间</span>
+        <span style="flex:1">反馈</span>
+      </div>
+
+      <!-- Applications list -->
+      <div class="list-area" id="listArea">
+        <div style="color:#9ca3af;font-size:13px;text-align:center;padding:40px 0;">加载中...</div>
+      </div>
+
+      <!-- Chat overlay -->
+      <aside class="chat-sidebar hidden" id="chatSidebar">
+        <div class="chat-iframe-wrap">
+          <iframe id="chatIframe" src="http://localhost/chatbot/aPeOSTemhgI3UTkK" allow="microphone"></iframe>
+        </div>
+      </aside>
+    </main>
+
+  </div><!-- /#appWrapper -->
+
+  <!-- Application Modal -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
       <h2 id="modalTitle">新增申请记录</h2>
@@ -339,6 +407,105 @@
 <script>
 const API = 'http://localhost:8000';
 
+// ── Auth helpers ──
+
+function getToken() { return localStorage.getItem('jwt_token'); }
+function getEmail() { return localStorage.getItem('user_email'); }
+
+function authHeader() {
+  return { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'application/json' };
+}
+
+function setSession(token, email) {
+  localStorage.setItem('jwt_token', token);
+  localStorage.setItem('user_email', email);
+}
+
+function clearSession() {
+  localStorage.removeItem('jwt_token');
+  localStorage.removeItem('user_email');
+}
+
+function showApp() {
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('appWrapper').classList.remove('hidden');
+  document.getElementById('userEmail').textContent = getEmail() || '—';
+  loadAll();
+}
+
+function showAuth() {
+  document.getElementById('appWrapper').classList.add('hidden');
+  document.getElementById('authScreen').classList.remove('hidden');
+}
+
+function logout() {
+  clearSession();
+  showAuth();
+}
+
+// ── Auth form ──
+
+let authMode = 'login'; // 'login' | 'register'
+
+function toggleAuthMode() {
+  authMode = authMode === 'login' ? 'register' : 'login';
+  const isRegister = authMode === 'register';
+  document.getElementById('authTitle').textContent   = isRegister ? '创建账号' : '登录账号';
+  document.getElementById('authSub').textContent     = isRegister ? '开始追踪你的求职进度' : '继续追踪你的求职进度';
+  document.getElementById('authBtn').textContent     = isRegister ? '注册' : '登录';
+  document.getElementById('authToggleText').textContent = isRegister ? '已有账号？' : '还没有账号？';
+  document.getElementById('authToggleLink').textContent = isRegister ? '立即登录' : '立即注册';
+  setAuthError('');
+}
+
+function setAuthError(msg) {
+  const el = document.getElementById('authError');
+  el.textContent = msg;
+  el.classList.toggle('show', !!msg);
+}
+
+async function submitAuth() {
+  const email    = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if (!email || !password) { setAuthError('请填写邮箱和密码'); return; }
+
+  const btn = document.getElementById('authBtn');
+  btn.disabled = true;
+  btn.textContent = '请稍候...';
+  setAuthError('');
+
+  const endpoint = authMode === 'register' ? '/auth/register' : '/auth/login';
+
+  try {
+    const res = await fetch(`${API}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setAuthError(data.detail || '操作失败，请重试');
+    } else {
+      setSession(data.token, data.email);
+      showApp();
+    }
+  } catch (e) {
+    setAuthError('网络错误，请检查 API 服务是否运行');
+  }
+
+  btn.disabled = false;
+  btn.textContent = authMode === 'register' ? '注册' : '登录';
+}
+
+// Allow Enter key to submit
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !document.getElementById('authScreen').classList.contains('hidden')) {
+    submitAuth();
+  }
+});
+
+// ── App logic ──
+
 function badgeHtml(feedback) {
   if (!feedback) return '<span class="app-badge badge-pending">No Response</span>';
   if (feedback.toLowerCase() === 'fail') return '<span class="app-badge badge-fail">Rejected</span>';
@@ -362,8 +529,19 @@ function cardHtml(app, isNew = false) {
     </div>`;
 }
 
+async function apiFetch(path, options = {}) {
+  const res = await fetch(`${API}${path}`, {
+    ...options,
+    headers: { ...authHeader(), ...(options.headers || {}) }
+  });
+  if (res.status === 401) { logout(); return null; }
+  return res;
+}
+
 async function loadApplications() {
-  const data = await fetch(`${API}/applications`).then(r => r.json());
+  const res = await apiFetch('/applications');
+  if (!res) return;
+  const data = await res.json();
   const area = document.getElementById('listArea');
   if (data.length === 0) {
     area.innerHTML = '<div style="color:#9ca3af;font-size:13px;text-align:center;padding:40px 0;">暂无申请记录</div>';
@@ -373,7 +551,9 @@ async function loadApplications() {
 }
 
 async function loadStats() {
-  const s = await fetch(`${API}/stats/summary`).then(r => r.json());
+  const res = await apiFetch('/stats/summary');
+  if (!res) return;
+  const s = await res.json();
   document.getElementById('val-total').textContent     = s.total;
   document.getElementById('val-countries').textContent = s.countries;
 }
@@ -381,7 +561,9 @@ async function loadStats() {
 let worktypeChart, countriesChart;
 
 async function loadWorktypeChart() {
-  const d = await fetch(`${API}/stats/worktype`).then(r => r.json());
+  const res = await apiFetch('/stats/worktype');
+  if (!res) return;
+  const d = await res.json();
   if (worktypeChart) worktypeChart.destroy();
   worktypeChart = new Chart(document.getElementById('chartWorktype'), {
     type: 'doughnut',
@@ -394,7 +576,9 @@ async function loadWorktypeChart() {
 }
 
 async function loadCountriesChart() {
-  const data = await fetch(`${API}/stats/countries`).then(r => r.json());
+  const res = await apiFetch('/stats/countries');
+  if (!res) return;
+  const data = await res.json();
   if (countriesChart) countriesChart.destroy();
   countriesChart = new Chart(document.getElementById('chartCountries'), {
     type: 'bar',
@@ -412,6 +596,13 @@ async function loadCountriesChart() {
       }
     }
   });
+}
+
+function loadAll() {
+  loadApplications();
+  loadStats();
+  loadWorktypeChart();
+  loadCountriesChart();
 }
 
 function toggleChat() {
@@ -466,18 +657,14 @@ async function saveApplication() {
     work_type:    document.getElementById('f-worktype').value || null,
   };
 
-  const url    = editingId ? `${API}/applications/${editingId}` : `${API}/applications`;
+  const url    = editingId ? `/applications/${editingId}` : '/applications';
   const method = editingId ? 'PUT' : 'POST';
 
-  const res = await fetch(url, {
-    method,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
+  const res = await apiFetch(url, { method, body: JSON.stringify(body) });
 
   btn.disabled = false; btn.textContent = editingId ? '更新' : '保存';
 
-  if (res.ok) {
+  if (res && res.ok) {
     closeModal();
     await loadApplications();
     loadStats();
@@ -486,10 +673,12 @@ async function saveApplication() {
   }
 }
 
-loadApplications();
-loadStats();
-loadWorktypeChart();
-loadCountriesChart();
+// ── Init ──
+if (getToken()) {
+  showApp();
+} else {
+  showAuth();
+}
 </script>
 </body>
 </html>
