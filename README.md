@@ -6,7 +6,7 @@
 
 **项目定位**：基于自然语言的求职投递情况数据分析工具，支持多用户，可小范围商用
 
-**核心功能**：用中文或英文提问，自动查询数据库并给出结构化回答；实时数据可视化看板；在线新增、编辑、删除申请记录；搜索与排序；分页浏览；邀请码注册体系；管理员后台
+**核心功能**：用中文或英文提问，自动查询数据库并给出结构化回答；实时数据可视化看板；图片/截图 AI 自动识别并填写申请记录；在线新增、编辑、删除申请记录；搜索与排序；分页浏览；邀请码注册体系；管理员后台
 
 ---
 
@@ -14,7 +14,8 @@
 
 | 层级 | 技术 |
 |------|------|
-| 大模型 | DeepSeek V3（via API，直接调用） |
+| 大模型（对话） | DeepSeek V3（via API） |
+| 大模型（图像识别） | Claude Haiku 4.5（via Anthropic API） |
 | 后端 | Python FastAPI + uvicorn |
 | 数据库 | PostgreSQL |
 | 前端 | 纯 HTML + Chart.js |
@@ -33,13 +34,19 @@
     ├── 主内容区（申请记录列表 + 搜索/排序/分页 + 在线表单）
     │       └── GET/POST/PUT/DELETE /applications
     │
-    └── AI 对话面板（自定义对话 UI，点击展开）
+    ├── AI 对话面板（自定义对话 UI，点击展开）
+    │       │
+    │       └── POST /chat（JWT 鉴权）
+    │               │
+    │               ├── DeepSeek API：自然语言 → SQL（注入 user_id）
+    │               ├── PostgreSQL 执行查询
+    │               └── DeepSeek API：查询结果 → 自然语言回复
+    │
+    └── 自动识别申请记录（上传图片或 Ctrl+V 粘贴截图）
             │
-            └── POST /chat（JWT 鉴权）
+            └── POST /applications/parse-image（JWT 鉴权）
                     │
-                    ├── DeepSeek API：自然语言 → SQL（注入 user_id）
-                    ├── PostgreSQL 执行查询
-                    └── DeepSeek API：查询结果 → 自然语言回复
+                    └── Claude Haiku 4.5 Vision：图片 → 结构化 JSON 字段
 ```
 
 ---
@@ -112,6 +119,7 @@
 | POST | /applications | 新增申请记录 |
 | PUT | /applications/{id} | 编辑申请记录 |
 | DELETE | /applications/{id} | 删除申请记录 |
+| POST | /applications/parse-image | 上传图片，AI 识别并返回申请字段 JSON |
 | POST | /chat | AI 对话（每日限 50 次，每分钟限 30 次） |
 | GET | /stats/summary | 总数、地点数 |
 | GET | /stats/countries | Top 5 投递地点 |
@@ -134,7 +142,7 @@
 
 - **登录/注册页**：首次访问显示认证界面；注册需填写邀请码；登录后 token 存入 localStorage，30 天有效
 - **左侧栏**：logo、当前登录邮箱 + 退出按钮、Ask AI 按钮、管理员入口（仅管理员可见）、总投递数 / 地点数统计卡、Work Type 环形图（含 Hybrid）、Top Locations 柱状图（前 5）
-- **主内容区**：搜索框（按公司名/职位名实时过滤）、申请时间排序（点击列标题切换升/降序）、分页（每页 20 条）、点击记录编辑、每条记录可删除
+- **主内容区**：**自动识别申请记录**（点击按钮或 Ctrl+V 粘贴截图，AI 自动提取公司/职位/地点/链接等字段）、手动新增申请记录、搜索框（按公司名/职位名实时过滤）、申请时间排序（点击列标题切换升/降序）、分页（每页 10 条）、点击记录编辑、每条记录可删除
 - **AI 对话面板**：支持多轮对话，内置示例问题，每日限 50 次，拒绝回答与求职无关的问题
 - **管理员后台**：用户管理（删除、切换权限、重置密码）+ 邀请码管理（生成、复制、撤销）
 
@@ -143,7 +151,7 @@
 ## 七、安全
 
 - JWT token 鉴权（SECRET_KEY 存于 .env，不进 git）
-- DeepSeek API Key 存于 .env，不进 git
+- DeepSeek / Anthropic API Key 存于 .env，不进 git
 - 邀请码注册控制，一码一次
 - SQL 安全检查：仅允许 SELECT，强制 user_id 过滤，禁止访问非授权表
 - /chat 每用户每日 50 次、每分钟 30 次双重限流
@@ -189,7 +197,7 @@ pip install -r requirements.txt
 
 # 3. 配置环境变量
 cp .env.example .env
-# 编辑 .env，填入真实的 key 和数据库信息
+# 编辑 .env，填入 DEEPSEEK_API_KEY、ANTHROPIC_API_KEY、SECRET_KEY 和数据库信息
 
 # 4. 建表
 psql -U postgres -d jobsdb -f schema.sql
