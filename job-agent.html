@@ -1001,7 +1001,7 @@ const LANGS = {
     optRemote:             '远程',
     optOnsite:             '现场',
     optHybrid:             '混合',
-    feedbackOptions:       ['', '拒绝', '录用', '面试', '笔试'],
+    feedbackOptions:       ['', '待回复', '拒绝', '录用', '面试', '笔试'],
     btnCancel:             '取消',
     btnSave:               '保存',
     btnUpdate:             '更新',
@@ -1172,7 +1172,7 @@ const LANGS = {
     optRemote:             'Remote',
     optOnsite:             'Onsite',
     optHybrid:             'Hybrid',
-    feedbackOptions:       ['', 'Fail', 'Offer', 'Interview', 'Online Assessment'],
+    feedbackOptions:       ['', 'No Response', 'Fail', 'Offer', 'Interview', 'Online Assessment'],
     btnCancel:             'Cancel',
     btnSave:               'Save',
     btnUpdate:             'Update',
@@ -1271,7 +1271,7 @@ function applyLang() {
   document.querySelectorAll('[data-i18n-opt]').forEach(el => {
     el.textContent = t(el.dataset.i18nOpt);
   });
-  const FB_EN = ['', 'Fail', 'Offer', 'Interview', 'Online Assessment'];
+  const FB_EN = ['', 'No Response', 'Fail', 'Offer', 'Interview', 'Online Assessment'];
   const fbLabels = t('feedbackOptions');
   window._fbToEn = {};
   window._fbToDisplay = {};
