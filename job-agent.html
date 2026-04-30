@@ -1466,7 +1466,7 @@ function cardHtml(app, isNew = false) {
       <span class="col-location">${esc(app.location) || '—'}</span>
       <span class="col-worktype">${app.work_type ? (WORKTYPE_KEY[app.work_type] ? t(WORKTYPE_KEY[app.work_type]) : esc(app.work_type)) : '—'}</span>
       <span class="col-feedback">${badgeHtml(app.feedback)}</span>
-      ${app.notes ? `<span title="${esc(app.notes)}" style="font-size:13px;cursor:default;" onclick="event.stopPropagation()">📝</span>` : '<span style="width:18px;display:inline-block;"></span>'}
+      <span style="width:26px;flex-shrink:0;font-size:13px;cursor:default;text-align:center;" onclick="event.stopPropagation()" title="${app.notes ? esc(app.notes) : ''}">${app.notes ? '📝' : ''}</span>
       <button class="del-btn" onclick="event.stopPropagation(); deleteApplication(${app.id})" title="✕">✕</button>
     </div>`;
 }
