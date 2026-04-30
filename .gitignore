@@ -3,3 +3,7 @@ __pycache__/
 .env
 *.log
 .DS_Store
+backups/
+*.sql.gz
+alipay.JPG
+wechat.JPG
