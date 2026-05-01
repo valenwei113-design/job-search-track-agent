@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Job Track Agent</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
   <style>
@@ -13,46 +14,46 @@
 
     body {
       font-family: 'Inter', -apple-system, sans-serif;
-      background: #f8f9fc;
+      background: #f0ece4;
       height: 100vh;
       display: flex;
       overflow: hidden;
-      color: #111827;
+      color: #0d0d0d;
     }
 
     /* ── Auth Screen ── */
     #authScreen {
       position: fixed; inset: 0; z-index: 200;
-      background: #f8f9fc;
+      background: #f0ece4;
       display: flex; align-items: center; justify-content: center;
     }
     #authScreen.hidden { display: none; }
     .auth-box {
-      background: #fff; border-radius: 16px; padding: 36px 40px;
+      background: #faf8f4; border-radius: 16px; padding: 36px 40px;
       width: 400px; max-width: 95vw;
       box-shadow: 0 4px 32px rgba(0,0,0,0.10);
     }
     .auth-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
     .auth-logo-icon {
       width: 40px; height: 40px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      background: #0d0d0d;
       border-radius: 10px; display: flex; align-items: center;
       justify-content: center; font-size: 18px;
     }
-    .auth-logo-text { font-size: 18px; font-weight: 700; color: #111827; }
-    .auth-logo-sub  { font-size: 12px; color: #9ca3af; margin-top: 2px; }
-    .auth-title { font-size: 20px; font-weight: 700; color: #111827; margin-bottom: 6px; }
-    .auth-sub   { font-size: 13px; color: #6b7280; margin-bottom: 24px; }
+    .auth-logo-text { font-size: 18px; font-weight: 700; color: #0d0d0d; }
+    .auth-logo-sub  { font-size: 12px; color: #999080; margin-top: 2px; }
+    .auth-title { font-size: 20px; font-weight: 700; color: #0d0d0d; margin-bottom: 6px; }
+    .auth-sub   { font-size: 13px; color: #555048; margin-bottom: 24px; }
     .auth-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
-    .auth-row label { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+    .auth-row label { font-size: 11px; font-weight: 600; color: #555048; text-transform: uppercase; letter-spacing: 0.5px; }
     .auth-row input {
-      padding: 10px 13px; border: 1px solid #e5e7eb; border-radius: 8px;
-      font-size: 13px; color: #111827; outline: none; transition: border-color 0.15s;
+      padding: 10px 13px; border: 1px solid #dcd8d0; border-radius: 8px;
+      font-size: 13px; color: #0d0d0d; outline: none; transition: border-color 0.15s;
     }
-    .auth-row input:focus { border-color: #6366f1; }
+    .auth-row input:focus { border-color: #c0392b; }
     .auth-btn {
       width: 100%; padding: 11px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      background: #0d0d0d;
       color: #fff; border: none; border-radius: 8px;
       font-size: 14px; font-weight: 600; cursor: pointer;
       transition: opacity 0.15s; margin-top: 6px;
@@ -60,9 +61,9 @@
     .auth-btn:hover { opacity: 0.9; }
     .auth-btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .auth-toggle {
-      text-align: center; margin-top: 16px; font-size: 13px; color: #6b7280;
+      text-align: center; margin-top: 16px; font-size: 13px; color: #555048;
     }
-    .auth-toggle a { color: #6366f1; cursor: pointer; font-weight: 500; text-decoration: none; }
+    .auth-toggle a { color: #c0392b; cursor: pointer; font-weight: 500; text-decoration: none; }
     .auth-toggle a:hover { text-decoration: underline; }
     .auth-error {
       color: #dc2626; font-size: 12px; margin-bottom: 12px;
@@ -80,43 +81,44 @@
 
     /* ── Sidebar ── */
     .sidebar {
-      width: 300px; min-width: 300px;
-      background: #fff;
-      border-right: 1px solid #e5e7eb;
+      width: 220px; min-width: 220px;
+      background: #f8f6f2;
+      border-right: 2px solid #dcd8d0;
       display: flex; flex-direction: column;
       padding: 14px 16px; gap: 10px;
-      overflow: hidden;
+      overflow: visible;
+      position: relative; z-index: 10;
     }
     .logo { display: flex; align-items: center; gap: 10px; }
     .logo-icon {
       width: 34px; height: 34px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      background: #0d0d0d;
       border-radius: 9px; display: flex; align-items: center;
       justify-content: center; font-size: 16px; flex-shrink: 0;
     }
-    .logo-text { font-size: 15px; font-weight: 600; color: #111827; }
-    .logo-sub  { font-size: 11px; color: #9ca3af; margin-top: 1px; }
-    .divider { height: 1px; background: #f3f4f6; }
+    .logo-text { font-size: 15px; font-weight: 600; color: #0d0d0d; }
+    .logo-sub  { font-size: 11px; color: #999080; margin-top: 1px; }
+    .divider { height: 1px; background: #dcd8d0; }
     .section-title {
       font-size: 10px; font-weight: 600; letter-spacing: 1px;
-      color: #9ca3af; text-transform: uppercase; margin-bottom: 8px;
+      color: #999080; text-transform: uppercase; margin-bottom: 8px;
     }
     .add-btn {
       width: 100%; padding: 10px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      background: #0d0d0d;
       color: #fff; border: none; border-radius: 8px;
       font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
     }
     .add-btn:hover { opacity: 0.9; }
     .stat-row { display: flex; gap: 8px; }
     .stat-card {
-      flex: 1; background: #f9fafb; border: 1px solid #e5e7eb;
+      flex: 1; background: #f8f6f2; border: 1px solid #dcd8d0;
       border-radius: 8px; padding: 8px 10px;
     }
-    .stat-value { font-size: 17px; font-weight: 700; color: #111827; line-height: 1; }
-    .stat-label { font-size: 10px; color: #9ca3af; margin-top: 3px; }
+    .stat-value { font-size: 17px; font-weight: 700; color: #0d0d0d; line-height: 1; }
+    .stat-label { font-size: 10px; color: #999080; margin-top: 3px; }
     .chart-block {
-      background: #f9fafb; border: 1px solid #e5e7eb;
+      background: #f8f6f2; border: 1px solid #dcd8d0;
       border-radius: 8px; padding: 10px;
     }
     .chart-block canvas { max-height: 120px; }
@@ -125,27 +127,43 @@
 
     /* User info in sidebar */
     .user-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 6px 10px; background: #f9fafb; border: 1px solid #e5e7eb;
-      border-radius: 8px;
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 10px 12px; background: #eeeae2; border: 1px solid #dcd8d0;
+      border-radius: 10px;
     }
-    .user-email { font-size: 11px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .user-row-top { display: flex; align-items: center; gap: 9px; min-width: 0; }
+    .user-avatar {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      background: #0d0d0d;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; color: #fff;
+    }
+    .user-email { font-size: 12px; color: #333028; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .user-actions { display: flex; align-items: center; gap: 4px; }
+    .user-action-btn {
+      flex: 1; padding: 5px 4px; font-size: 11px; font-weight: 500;
+      color: #555048; background: #f8f6f2; border: 1px solid #dcd8d0;
+      border-radius: 6px; cursor: pointer; text-align: center;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .user-action-btn:hover { background: #eeeae2; color: #0d0d0d; border-color: #dcd8d0; }
     .logout-btn {
-      font-size: 11px; color: #6366f1; background: none; border: none;
+      font-size: 11px; color: #555048; background: none; border: none;
       cursor: pointer; font-weight: 500; flex-shrink: 0; padding-left: 8px;
     }
     .logout-btn:hover { text-decoration: underline; }
     .chpwd-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:1000; align-items:center; justify-content:center; }
     .chpwd-overlay.open { display:flex; }
-    .chpwd-box { background:#fff; border-radius:12px; padding:28px 24px; width:340px; box-shadow:0 8px 32px rgba(0,0,0,0.15); }
-    .chpwd-box h3 { font-size:15px; font-weight:700; margin:0 0 20px; color:#111827; }
-    .chpwd-box label { font-size:12px; font-weight:600; color:#374151; display:block; margin-bottom:4px; }
-    .chpwd-box input { width:100%; box-sizing:border-box; border:1px solid #e5e7eb; border-radius:8px; padding:8px 10px; font-size:13px; margin-bottom:14px; }
-    .chpwd-box input:focus { outline:none; border-color:#6366f1; }
+    .chpwd-box { background:#faf8f4; border-radius:12px; padding:28px 24px; width:340px; box-shadow:0 8px 32px rgba(0,0,0,0.15); }
+    .chpwd-box h3 { font-size:15px; font-weight:700; margin:0 0 20px; color:#0d0d0d; }
+    .chpwd-box label { font-size:12px; font-weight:600; color:#333028; display:block; margin-bottom:4px; }
+    .chpwd-box input { width:100%; box-sizing:border-box; border:1px solid #dcd8d0; border-radius:8px; padding:8px 10px; font-size:13px; margin-bottom:14px; }
+    .chpwd-box input:focus { outline:none; border-color:#c0392b; }
     .chpwd-actions { display:flex; gap:8px; margin-top:4px; }
     .chpwd-actions button { flex:1; padding:9px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; border:none; }
-    .chpwd-cancel { background:#f3f4f6; color:#374151; }
-    .chpwd-submit { background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; }
+    .chpwd-cancel { background:#eeeae2; color:#333028; }
+    .chpwd-submit { background:#0d0d0d; color:#fff; }
     .chpwd-msg { font-size:12px; margin-bottom:10px; padding:8px 10px; border-radius:6px; display:none; }
     .chpwd-msg.error { display:block; background:#fee2e2; color:#dc2626; }
     .chpwd-msg.success { display:block; background:#d1fae5; color:#059669; }
@@ -154,66 +172,92 @@
     .main {
       flex: 1; display: flex; flex-direction: column;
       overflow: hidden; position: relative;
+      background: #f0ece4;
     }
 
     /* Applications list */
     .list-area {
-      flex: 1; overflow-y: auto; padding: 6px 24px 6px;
-      display: flex; flex-direction: column; gap: 5px;
+      flex: 1; overflow-y: auto; padding: 6px 24px 14px;
+      display: flex; flex-direction: column; gap: 12px;
     }
 
     /* Table header */
     .list-header {
       display: flex; align-items: center;
-      padding: 0 16px; height: 36px;
-      background: #f9fafb; border: 1px solid #e5e7eb;
-      border-radius: 8px; margin: 14px 24px 12px; flex-shrink: 0;
+      padding: 0 16px; height: 30px;
+      background: transparent; border: none;
+      border-bottom: 2px solid #dcd8d0;
+      border-radius: 0; margin: 10px 24px 4px; flex-shrink: 0;
     }
     .list-header span {
-      font-size: 12px; font-weight: 600; color: #6b7280;
+      font-size: 11px; font-weight: 600; color: #888070;
       text-transform: uppercase; letter-spacing: 0.5px;
     }
 
     .app-card {
-      background: #fff; border: 1px solid #e5e7eb;
-      border-radius: 8px; padding: 8px 16px;
+      background: #faf8f4; border: 1px solid #dcd8d0;
+      border-left: 4px solid #dcd8d0;
+      border-radius: 6px; padding: 8px 16px;
       display: flex; align-items: center;
-      transition: box-shadow 0.15s;
+      box-shadow:
+        3px 3px 0 -1px #faf8f4,
+        3px 3px 0 0     #dcd8d0,
+        6px 6px 0 -1px  #eeeae2,
+        6px 6px 0 0     #dcd8d0;
+      transition: box-shadow 0.2s, transform 0.2s, background 0.15s;
     }
-    .app-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.06); background: #fafafa; }
+    .app-card:hover {
+      background: #eeeae4;
+      transform: translate(-1px, -2px);
+      box-shadow:
+        0 6px 18px rgba(0,0,0,0.07),
+        3px 4px 0 -1px #faf8f4,
+        3px 4px 0 0     #dcd8d0,
+        6px 7px 0 -1px  #eeeae2,
+        6px 7px 0 0     #dcd8d0;
+    }
+    .app-card[data-feedback="Offer"]             { border-left-color: #2a7a4a; }
+    .app-card[data-feedback="Interview"]         { border-left-color: #2a5a9a; }
+    .app-card[data-feedback="Online Assessment"] { border-left-color: #8a6010; }
+    .app-card[data-feedback="Fail"]              { border-left-color: #c0392b; }
     .del-btn {
       width: 26px; height: 26px; border-radius: 5px; border: none;
       background: transparent; cursor: pointer; font-size: 14px;
-      color: #d1d5db; flex-shrink: 0;
+      color: #dcd8d0; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
       transition: background 0.15s, color 0.15s;
     }
-    .del-btn:hover { background: #fee2e2; color: #dc2626; }
+    .del-btn:hover { background: #fdecea; color: #c0392b; }
     .app-card.new-card { animation: slideIn 0.3s ease; }
     @keyframes slideIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
 
-    .col-company  { flex: 2; min-width: 0; font-size: 13px; font-weight: 600; color: #111827; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 12px; }
-    .col-position { flex: 2; min-width: 0; font-size: 12px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 12px; }
-    .col-location { flex: 1; min-width: 0; font-size: 12px; color: #6b7280; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px; }
-    .col-worktype { flex: 0 0 90px; font-size: 12px; color: #6b7280; padding-right: 8px; }
+    .col-num      { flex: 0 0 28px; font-size: 11px; color: #aaa090; font-weight: 600; font-variant-numeric: tabular-nums; padding-right: 4px; }
+    .col-company  { flex: 2; min-width: 0; font-size: 13px; font-weight: 600; color: #0d0d0d; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 12px; }
+    .col-position { flex: 2; min-width: 0; font-size: 12px; color: #555048; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 12px; }
+    .col-location { flex: 1; min-width: 0; font-size: 12px; color: #555048; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px; }
+    .col-worktype { flex: 0 0 90px; font-size: 12px; color: #555048; padding-right: 8px; }
     .col-link     { flex: 0 0 48px; padding-right: 8px; }
-    .col-link a   { font-size: 12px; color: #6366f1; text-decoration: none; display: inline-flex; align-items: center; gap: 3px; }
+    .col-link a   { font-size: 12px; color: #c0392b; text-decoration: none; display: inline-flex; align-items: center; gap: 3px; }
     .col-link a:hover { text-decoration: underline; }
-    .col-date     { flex: 0 0 116px; font-size: 12px; color: #9ca3af; padding-right: 8px; }
+    .col-date     { flex: 0 0 116px; font-size: 12px; color: #888070; padding-right: 8px; }
     .col-feedback { flex: 0 0 90px; padding-right: 8px; }
 
     .app-badge {
-      font-size: 11px; font-weight: 500; padding: 3px 8px;
-      border-radius: 20px; display: inline-block;
+      font-size: 10px; font-weight: 800; padding: 2px 6px;
+      border-radius: 3px; border: 1.5px solid currentColor;
+      text-transform: uppercase; letter-spacing: 0.7px;
+      display: inline-block; transform: rotate(-1.5deg); line-height: 1.4;
     }
-    .badge-pending { background: #f3f4f6; color: #6b7280; }
-    .badge-fail    { background: #fee2e2; color: #dc2626; }
-    .badge-offer   { background: #d1fae5; color: #059669; }
+    .badge-pending   { color: #888070; }
+    .badge-fail      { color: #c0392b; }
+    .badge-offer     { color: #2a7a4a; }
+    .badge-interview { color: #2a5a9a; }
+    .badge-oa        { color: #8a6010; }
 
     /* ── Chat overlay ── */
     .chat-sidebar {
       position: absolute; inset: 0;
-      background: #fff;
+      background: #faf8f4;
       display: flex; flex-direction: column;
       z-index: 20;
       transition: opacity 0.25s ease, transform 0.25s ease;
@@ -225,17 +269,17 @@
     .chat-topbar {
       padding: 0 16px; height: 44px; flex-shrink: 0;
       display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid #dcd8d0;
     }
-    .chat-topbar-title { font-size: 13px; font-weight: 600; color: #111827; }
+    .chat-topbar-title { font-size: 13px; font-weight: 600; color: #0d0d0d; }
     .chat-topbar-actions { display: flex; gap: 6px; }
     .chat-icon-btn {
       width: 26px; height: 26px; border-radius: 5px; border: none;
       background: transparent; cursor: pointer; font-size: 13px;
-      color: #9ca3af; display: flex; align-items: center; justify-content: center;
+      color: #999080; display: flex; align-items: center; justify-content: center;
       transition: background 0.15s, color 0.15s;
     }
-    .chat-icon-btn:hover { background: #f3f4f6; color: #6b7280; }
+    .chat-icon-btn:hover { background: #eeeae2; color: #555048; }
     .chat-messages {
       flex: 1; overflow-y: auto; padding: 16px;
       display: flex; flex-direction: column; gap: 12px;
@@ -247,22 +291,22 @@
       max-width: 75%; padding: 10px 14px;
       border-radius: 12px; font-size: 13px; line-height: 1.6;
     }
-    .chat-bubble.user { background: linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; border-bottom-right-radius:4px; }
-    .chat-bubble.ai   { background: #f3f4f6; color:#111827; border-bottom-left-radius:4px; }
-    .chat-bubble.thinking { color: #9ca3af; font-style: italic; }
+    .chat-bubble.user { background: #0d0d0d; color:#fff; border-bottom-right-radius:4px; }
+    .chat-bubble.ai   { background: #eeeae2; color:#0d0d0d; border-bottom-left-radius:4px; }
+    .chat-bubble.thinking { color: #999080; font-style: italic; }
     .chat-input-area {
-      padding: 12px 16px; border-top: 1px solid #e5e7eb;
+      padding: 12px 16px; border-top: 1px solid #dcd8d0;
       display: flex; gap: 8px; align-items: flex-end; flex-shrink: 0;
     }
     .chat-input {
-      flex: 1; padding: 9px 13px; border: 1px solid #e5e7eb;
+      flex: 1; padding: 9px 13px; border: 1px solid #dcd8d0;
       border-radius: 8px; font-size: 13px; font-family: inherit;
       resize: none; outline: none; max-height: 120px; line-height: 1.5;
       transition: border-color 0.15s;
     }
-    .chat-input:focus { border-color: #6366f1; }
+    .chat-input:focus { border-color: #c0392b; }
     .chat-send-btn {
-      padding: 9px 16px; background: linear-gradient(135deg,#6366f1,#8b5cf6);
+      padding: 9px 16px; background: #0d0d0d;
       color: #fff; border: none; border-radius: 8px; font-size: 13px;
       font-weight: 600; cursor: pointer; transition: opacity 0.15s; flex-shrink: 0;
     }
@@ -271,32 +315,32 @@
     .chat-empty {
       flex: 1; display: flex; flex-direction: column;
       align-items: center; justify-content: center; gap: 8px;
-      color: #9ca3af; font-size: 13px;
+      color: #999080; font-size: 13px;
     }
     .chat-empty-icon { font-size: 32px; }
     .chat-suggestions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 8px; }
     .chat-suggestion {
-      padding: 5px 11px; border: 1px solid #e5e7eb; border-radius: 20px;
-      font-size: 12px; color: #6b7280; cursor: pointer; background: #fff;
+      padding: 5px 11px; border: 1px solid #dcd8d0; border-radius: 20px;
+      font-size: 12px; color: #555048; cursor: pointer; background: #faf8f4;
       transition: border-color 0.15s, color 0.15s;
     }
-    .chat-suggestion:hover { border-color: #6366f1; color: #6366f1; }
+    .chat-suggestion:hover { border-color: #c0392b; color: #c0392b; }
 
     /* Ask AI toggle button */
     .ask-ai-btn {
       padding: 7px 14px; border-radius: 7px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      background: #0d0d0d;
       color: #fff; border: none; font-size: 12px;
       font-weight: 600; cursor: pointer; transition: opacity 0.15s; flex-shrink: 0;
     }
     .ask-ai-btn:hover { opacity: 0.9; }
     .search-input {
       flex: 1; max-width: 280px; padding: 7px 12px;
-      border: 1px solid #e5e7eb; border-radius: 7px;
-      font-size: 13px; color: #111827; outline: none;
-      transition: border-color 0.15s;
+      border: 1px solid #dcd8d0; border-radius: 7px;
+      font-size: 13px; color: #0d0d0d; outline: none;
+      background: #faf8f4; transition: border-color 0.15s;
     }
-    .search-input:focus { border-color: #6366f1; }
+    .search-input:focus { border-color: #c0392b; }
 
     /* ── Modal ── */
     .modal-overlay {
@@ -306,27 +350,27 @@
     }
     .modal-overlay.open { display: flex; }
     .modal {
-      background: #fff; border-radius: 14px; padding: 28px;
+      background: #faf8f4; border-radius: 14px; padding: 28px;
       width: 460px; max-width: 95vw;
       box-shadow: 0 20px 60px rgba(0,0,0,0.15);
     }
-    .modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 20px; color: #111827; }
+    .modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 20px; color: #0d0d0d; }
     .form-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 14px; }
-    .form-row label { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-row label { font-size: 11px; font-weight: 600; color: #555048; text-transform: uppercase; letter-spacing: 0.5px; }
     .form-row input, .form-row select {
-      padding: 9px 12px; border: 1px solid #e5e7eb; border-radius: 7px;
-      font-size: 13px; color: #111827; outline: none; transition: border-color 0.15s;
-      background: #fff;
+      padding: 9px 12px; border: 1px solid #dcd8d0; border-radius: 7px;
+      font-size: 13px; color: #0d0d0d; outline: none; transition: border-color 0.15s;
+      background: #faf8f4;
     }
-    .form-row input:focus, .form-row select:focus { border-color: #6366f1; }
+    .form-row input:focus, .form-row select:focus { border-color: #c0392b; }
     .form-actions { display: flex; gap: 8px; margin-top: 20px; }
     .btn-cancel {
-      flex: 1; padding: 10px; background: #f3f4f6; border: none;
-      border-radius: 7px; font-size: 13px; cursor: pointer; color: #374151;
+      flex: 1; padding: 10px; background: #eeeae2; border: none;
+      border-radius: 7px; font-size: 13px; cursor: pointer; color: #333028;
     }
     .btn-save {
       flex: 2; padding: 10px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      background: #0d0d0d;
       border: none; border-radius: 7px; font-size: 13px;
       font-weight: 600; color: #fff; cursor: pointer;
     }
@@ -336,34 +380,293 @@
     .img-parse-area {
       display: flex; align-items: center; gap: 10px;
       padding: 10px 14px; margin-top: 16px; margin-bottom: 18px;
-      background: #f5f3ff; border: 1.5px dashed #c4b5fd;
+      background: #f0ece4; border: 1.5px dashed #dcd8d0;
       border-radius: 9px; cursor: pointer;
       transition: background 0.15s;
     }
-    .img-parse-area:hover { background: #ede9fe; }
+    .img-parse-area:hover { background: #eeeae2; }
     .img-parse-area .img-parse-icon { font-size: 20px; flex-shrink: 0; }
     .img-parse-area .img-parse-text { flex: 1; }
     .img-parse-area .img-parse-text .img-parse-title {
-      font-size: 13px; font-weight: 600; color: #5b21b6;
+      font-size: 13px; font-weight: 600; color: #0d0d0d;
     }
     .img-parse-area .img-parse-text .img-parse-sub {
-      font-size: 11px; color: #7c3aed; opacity: 0.7; margin-top: 2px;
+      font-size: 11px; color: #555048; opacity: 0.7; margin-top: 2px;
     }
     .img-parse-status {
-      font-size: 12px; color: #6366f1; margin-bottom: 14px;
+      font-size: 12px; color: #c0392b; margin-bottom: 14px;
       min-height: 18px; display: flex; align-items: center; gap: 6px;
     }
     .img-parse-status.error { color: #ef4444; }
     .img-parse-status.success { color: #10b981; }
 
+    /* ── Sidebar nav — bookmark spine style ── */
+    .sidebar-nav {
+      display: flex; flex-direction: column; gap: 5px;
+      margin: 0 -16px;
+    }
+    .sidebar-tab {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px 11px 20px;
+      border: none; border-radius: 0;
+      background: transparent;
+      font-size: 13px; font-weight: 500; color: #555048;
+      cursor: pointer; text-align: left; width: 100%;
+      border-left: 4px solid transparent;
+      transition: background 0.18s, color 0.15s, border-color 0.15s, box-shadow 0.2s, border-radius 0.2s;
+    }
+    .sidebar-tab:hover {
+      background: rgba(0,0,0,0.06);
+      color: #0d0d0d;
+    }
+    .sidebar-tab[data-tab="jdmatch"]:hover,
+    .sidebar-tab[data-tab="jdmatch"].active { border-left-color: #c0392b; }
+    .sidebar-tab[data-tab="fate"]:hover,
+    .sidebar-tab[data-tab="fate"].active    { border-left-color: #2a5a9a; }
+    .sidebar-tab[data-tab="tracker"]:hover,
+    .sidebar-tab[data-tab="tracker"].active { border-left-color: #2a7a4a; }
+    .sidebar-tab.active {
+      background: #eeeae2;
+      color: #0d0d0d; font-weight: 600;
+      border-radius: 0 14px 14px 0;
+      margin-right: -2px; padding-right: 16px;
+      box-shadow: 3px 0 12px rgba(0,0,0,0.12);
+    }
+    .sidebar-tab-icon { font-size: 13px; width: 18px; text-align: center; flex-shrink: 0; font-weight: 700; letter-spacing: 0; }
+    .main-tab-content { display: none; }
+    .main-tab-content.active { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+    .main-tab-content.tab-flip-out { display: flex !important; }
+
+    @keyframes tabFlipOut {
+      from { opacity: 1; transform: perspective(900px) rotateX(0deg) translateY(0); }
+      to   { opacity: 0; transform: perspective(900px) rotateX(5deg) translateY(-14px); }
+    }
+    @keyframes tabFlipIn {
+      from { opacity: 0; transform: perspective(900px) rotateX(-7deg) translateY(16px); }
+      to   { opacity: 1; transform: perspective(900px) rotateX(0deg) translateY(0); }
+    }
+    .tab-flip-out { animation: tabFlipOut 0.15s ease-in  forwards; }
+    .tab-flip-in  { animation: tabFlipIn  0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+    @keyframes resultBlockIn {
+      from { opacity: 0; transform: perspective(700px) rotateX(-8deg) translateY(14px); }
+      to   { opacity: 1; transform: none; }
+    }
+    .result-block-in { animation: resultBlockIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+    /* ── JD Match page ── */
+    .jd-layout {
+      display: flex; gap: 20px; padding: 20px 24px;
+      flex: 1; overflow: hidden; min-width: 0;
+    }
+    .jd-col {
+      flex: 1; display: flex; flex-direction: column;
+      gap: 12px; overflow-y: auto; min-width: 0;
+    }
+    .jd-col-label {
+      font-size: 11px; font-weight: 600; color: #888070;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;
+    }
+    .jd-textarea {
+      width: 100%; padding: 10px 12px; border: 1px solid #dcd8d0;
+      border-radius: 8px; font-size: 13px; font-family: inherit;
+      color: #0d0d0d; background: #faf8f4; resize: vertical; outline: none;
+      transition: border-color 0.15s; line-height: 1.5; box-sizing: border-box;
+    }
+    .jd-textarea:focus { border-color: #555048; }
+    .jd-save-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 2px;
+    }
+    .jd-saved-label { font-size: 11px; color: #10b981; }
+    .jd-sm-btn {
+      font-size: 11px; font-weight: 600; padding: 3px 9px;
+      border-radius: 5px; border: 1px solid #dcd8d0;
+      background: #eeeae2; color: #555048; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .jd-sm-btn:hover { background: #eeeae2; }
+    .jd-analyze-btn {
+      padding: 10px 20px; background: #0d0d0d;
+      color: #fff; border: none; border-radius: 8px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: opacity 0.15s; align-self: flex-start; flex-shrink: 0;
+    }
+    .jd-analyze-btn:hover { opacity: 0.9; }
+    .jd-analyze-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .jd-result-box {
+      flex: 1; background: #faf8f4; border: 1px solid #dcd8d0;
+      border-radius: 8px; padding: 16px; font-size: 13px;
+      color: #1a1610; line-height: 1.7; white-space: pre-wrap;
+      overflow-y: auto; min-height: 200px;
+    }
+    .jd-result-actions {
+      display: flex; gap: 8px; align-items: center; flex-shrink: 0;
+    }
+    /* ── Spinner ── */
+    @keyframes jd-spin { to { transform: rotate(360deg); } }
+    .jd-spinner {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid #dcd8d0; border-top-color: #555048;
+      animation: jd-spin 0.7s linear infinite; display: inline-block; vertical-align: middle;
+    }
+    .jd-loading {
+      display: flex; align-items: center; gap: 10px;
+      color: #888070; font-size: 13px; padding: 24px 0;
+    }
+
+    /* ── Status bar ── */
+    .jd-status-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 24px; background: #eeeae2; border-bottom: 1px solid #dcd8d0;
+      flex-shrink: 0;
+    }
+    .jd-status-items { display: flex; gap: 16px; }
+    .jd-status-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #555048; }
+    .jd-status-dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; flex-shrink: 0; }
+
+    /* ── Score card ── */
+    .jd-result-header { display: flex; align-items: center; gap: 24px; margin-bottom: 24px; }
+    .jd-score-circle {
+      width: 90px; height: 90px; border-radius: 50%; border: 5px solid;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .jd-score-num { font-size: 30px; font-weight: 800; line-height: 1; }
+    .jd-score-sub { font-size: 11px; color: #888070; margin-top: 2px; }
+    .jd-summary-text { font-size: 13px; color: #1a1610; line-height: 1.75; }
+    .jd-skills-row { margin-bottom: 16px; }
+    .jd-skills-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.5px; color: #555048; margin-bottom: 8px;
+    }
+    .jd-tags-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+    .jd-divider { height: 1px; background: #dcd8d0; margin: 20px 0; }
+
+    /* ── Markdown result ── */
+    .md-result { font-size:13px; color:#1a1610; line-height:1.8; }
+    .md-result h1,.md-result h2,.md-result h3 {
+      font-weight:700; color:#0d0d0d; margin:16px 0 6px;
+    }
+    .md-result h1 { font-size:16px; }
+    .md-result h2 { font-size:14px; }
+    .md-result h3 { font-size:13px; }
+    .md-result p { margin:6px 0; }
+    .md-result ul,.md-result ol { padding-left:20px; margin:6px 0; }
+    .md-result li { margin:3px 0; }
+    .md-result strong { font-weight:600; color:#0d0d0d; }
+    .md-result hr { border:none; border-top:1px solid #dcd8d0; margin:14px 0; }
+    .md-result .score-badge {
+      display:inline-block; padding:4px 14px; border-radius:20px;
+      font-size:22px; font-weight:700; color:#fff;
+      margin:4px 0 12px; line-height:1.4;
+    }
+    .md-result .tag-hit  { display:inline-block; background:#d1fae5; color:#065f46; border-radius:4px; padding:1px 7px; font-size:12px; margin:2px 3px 2px 0; }
+    .md-result .tag-miss { display:inline-block; background:#fee2e2; color:#991b1b; border-radius:4px; padding:1px 7px; font-size:12px; margin:2px 3px 2px 0; }
+
+    .jd-empty-hint {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; height: 100%;
+      color: #888070; font-size: 13px; text-align: center; gap: 8px;
+    }
+    .jd-empty-icon { font-size: 32px; }
+
+    /* ── Fate Tab ── */
+    .fate-select {
+      flex: 1; padding: 8px 12px; border: 1px solid #dcd8d0;
+      border-radius: 8px; font-size: 13px; color: #1a1610;
+      background: #faf8f4; outline: none; cursor: pointer;
+      transition: border-color 0.15s;
+    }
+    .fate-select:focus { border-color: #555048; }
+
+    .fate-card {
+      width: 148px; height: 230px;
+      perspective: 1000px;
+      cursor: pointer; flex-shrink: 0;
+      transition: transform 0.35s cubic-bezier(0.22,1,0.36,1), opacity 0.4s;
+      position: relative; z-index: 1;
+    }
+    .fate-card:nth-child(1) { transform: rotate(-7deg) translateY(12px); }
+    .fate-card:nth-child(2) { transform: rotate(-2.5deg) translateY(4px); }
+    .fate-card:nth-child(3) { transform: rotate(2.5deg) translateY(4px); }
+    .fate-card:nth-child(4) { transform: rotate(7deg) translateY(12px); }
+    .fate-card:nth-child(1):not(.flipped):not(.faded):hover { transform: rotate(-3deg) translateY(-4px) scale(1.06); z-index:5; }
+    .fate-card:nth-child(2):not(.flipped):not(.faded):hover { transform: rotate(-1deg) translateY(-6px) scale(1.06); z-index:5; }
+    .fate-card:nth-child(3):not(.flipped):not(.faded):hover { transform: rotate(1deg) translateY(-6px) scale(1.06); z-index:5; }
+    .fate-card:nth-child(4):not(.flipped):not(.faded):hover { transform: rotate(3deg) translateY(-4px) scale(1.06); z-index:5; }
+    .fate-card.flipped  { transform: rotate(0deg) translateY(-20px) scale(1.1) !important; z-index:10; cursor:default; }
+    .fate-card.faded    { opacity: 0.2; transform: rotate(0deg) scale(0.9) !important; cursor:default; }
+
+    @keyframes cardDeal {
+      from { opacity:0; transform: translateY(-60px) scale(0.7); }
+    }
+    .fate-card:nth-child(1) { animation: cardDeal 0.4s ease-out backwards 0s; }
+    .fate-card:nth-child(2) { animation: cardDeal 0.4s ease-out backwards 0.09s; }
+    .fate-card:nth-child(3) { animation: cardDeal 0.4s ease-out backwards 0.18s; }
+    .fate-card:nth-child(4) { animation: cardDeal 0.4s ease-out backwards 0.27s; }
+
+    .fate-card-inner {
+      width:100%; height:100%;
+      position:relative;
+      transform-style: preserve-3d;
+      transition: transform 0.75s cubic-bezier(0.4,0,0.2,1);
+    }
+    .fate-card.flipped .fate-card-inner { transform: rotateY(180deg); }
+
+    .fate-card-back, .fate-card-front {
+      position:absolute; width:100%; height:100%;
+      backface-visibility: hidden;
+      border-radius: 12px;
+      border: 2px solid #c8a850;
+    }
+    .fate-card-back {
+      background: radial-gradient(ellipse at 50% 35%, #2e1a4a 0%, #0c0816 100%);
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:8px;
+      overflow:hidden;
+    }
+    .fate-card-back::before {
+      content:''; position:absolute; inset:7px;
+      border: 1px solid rgba(200,168,80,0.45); border-radius:8px; pointer-events:none;
+    }
+    .fate-card-back-star {
+      font-size:30px; color:#c8a850; line-height:1;
+      text-shadow: 0 0 18px rgba(200,168,80,0.7);
+    }
+    .fate-card-back-label {
+      font-size:9px; font-weight:700; color:#c8a850;
+      letter-spacing:3px; opacity:0.65; text-transform:uppercase;
+    }
+    .fate-card-front {
+      background: linear-gradient(165deg, #fef9ed 0%, #f5e8c8 100%);
+      transform: rotateY(180deg);
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:space-between;
+      padding:18px 14px; overflow:hidden;
+    }
+    .fate-card-front::before {
+      content:''; position:absolute; inset:7px;
+      border: 1px solid rgba(200,168,80,0.45); border-radius:8px; pointer-events:none;
+    }
+    .fate-card-front-icon { font-size:20px; color:#c8a850; flex-shrink:0; }
+    .fate-card-message {
+      font-size:11.5px; color:#1a1610; line-height:1.75;
+      text-align:center; font-style:italic;
+      flex:1; display:flex; align-items:center; padding:8px 0;
+    }
+    .fate-card-front-footer {
+      font-size:9px; color:#c8a850; letter-spacing:2px;
+      opacity:0.65; text-transform:uppercase; flex-shrink:0;
+    }
+
     /* ── Admin tabs ── */
-    .admin-tabs { display: flex; gap: 0; border-bottom: 1px solid #e5e7eb; flex-shrink: 0; }
+    .admin-tabs { display: flex; gap: 0; border-bottom: 1px solid #dcd8d0; flex-shrink: 0; }
     .admin-tab {
       padding: 10px 20px; font-size: 13px; font-weight: 500;
-      color: #6b7280; cursor: pointer; border-bottom: 2px solid transparent;
+      color: #555048; cursor: pointer; border-bottom: 2px solid transparent;
       transition: color 0.15s;
     }
-    .admin-tab.active { color: #6366f1; border-bottom-color: #6366f1; }
+    .admin-tab.active { color: #0d0d0d; border-bottom-color: #0d0d0d; }
     .admin-tab-content { display: none; }
     .admin-tab-content.active { display: block; }
 
@@ -375,87 +678,87 @@
     }
     #adminPanel.hidden { display: none; }
     .admin-box {
-      background: #fff; border-radius: 14px;
+      background: #faf8f4; border-radius: 14px;
       width: 700px; max-width: 96vw; max-height: 85vh;
       display: flex; flex-direction: column;
       box-shadow: 0 20px 60px rgba(0,0,0,0.18);
       overflow: hidden;
     }
     .admin-header {
-      padding: 16px 22px; border-bottom: 1px solid #e5e7eb;
+      padding: 16px 22px; border-bottom: 1px solid #dcd8d0;
       display: flex; align-items: center; justify-content: space-between;
       flex-shrink: 0;
     }
-    .admin-header h2 { font-size: 15px; font-weight: 700; color: #111827; }
+    .admin-header h2 { font-size: 15px; font-weight: 700; color: #0d0d0d; }
     .admin-close {
       width: 26px; height: 26px; border-radius: 6px; border: none;
       background: transparent; cursor: pointer; font-size: 14px;
-      color: #9ca3af; display: flex; align-items: center; justify-content: center;
+      color: #999080; display: flex; align-items: center; justify-content: center;
     }
-    .admin-close:hover { background: #f3f4f6; color: #6b7280; }
+    .admin-close:hover { background: #eeeae2; color: #555048; }
     .admin-body { overflow-y: auto; padding: 16px 22px; flex: 1; }
     .admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .admin-table th {
       text-align: left; font-size: 11px; font-weight: 600;
-      color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;
+      color: #555048; text-transform: uppercase; letter-spacing: 0.5px;
       padding: 0 10px 10px;
     }
-    .admin-table td { padding: 10px; border-top: 1px solid #f3f4f6; vertical-align: middle; }
+    .admin-table td { padding: 10px; border-top: 1px solid #eeeae2; vertical-align: middle; }
     .admin-table tr:hover td { background: #fafafa; }
-    .admin-badge-admin { background: #ede9fe; color: #7c3aed; font-size: 11px; padding: 2px 7px; border-radius: 10px; font-weight: 500; }
-    .admin-badge-user  { background: #f3f4f6; color: #6b7280; font-size: 11px; padding: 2px 7px; border-radius: 10px; font-weight: 500; }
+    .admin-badge-admin { background: #eeeae2; color: #555048; font-size: 11px; padding: 2px 7px; border-radius: 10px; font-weight: 500; }
+    .admin-badge-user  { background: #eeeae2; color: #555048; font-size: 11px; padding: 2px 7px; border-radius: 10px; font-weight: 500; }
     .admin-action-btn {
-      font-size: 11px; padding: 4px 9px; border-radius: 5px; border: 1px solid #e5e7eb;
-      background: #fff; cursor: pointer; color: #374151; margin-right: 4px;
+      font-size: 11px; padding: 4px 9px; border-radius: 5px; border: 1px solid #dcd8d0;
+      background: #faf8f4; cursor: pointer; color: #333028; margin-right: 4px;
       transition: background 0.15s;
     }
-    .admin-action-btn:hover { background: #f3f4f6; }
+    .admin-action-btn:hover { background: #eeeae2; }
     .admin-action-btn.danger { color: #dc2626; border-color: #fecaca; }
     .admin-action-btn.danger:hover { background: #fee2e2; }
     .reset-pw-row { display: flex; gap: 6px; align-items: center; margin-top: 4px; }
     .reset-pw-input {
-      font-size: 12px; padding: 4px 8px; border: 1px solid #e5e7eb;
+      font-size: 12px; padding: 4px 8px; border: 1px solid #dcd8d0;
       border-radius: 5px; outline: none; width: 130px;
     }
-    .reset-pw-input:focus { border-color: #6366f1; }
+    .reset-pw-input:focus { border-color: #c0392b; }
 
     /* Admin button in sidebar */
     .admin-btn {
       width: 100%; padding: 8px 10px;
-      background: #ede9fe; color: #7c3aed;
-      border: 1px solid #ddd6fe; border-radius: 8px;
+      background: #eeeae2; color: #555048;
+      border: 1px solid #dcd8d0; border-radius: 8px;
       font-size: 12px; font-weight: 600; cursor: pointer;
       text-align: left; transition: background 0.15s;
     }
-    .admin-btn:hover { background: #ddd6fe; }
+    .admin-btn:hover { background: #dcd8d0; }
 
     .page-btn {
       min-width: 28px; height: 28px; padding: 0 6px;
-      border: 1px solid #e5e7eb; border-radius: 5px;
-      background: #fff; font-size: 12px; cursor: pointer;
-      color: #374151; transition: background 0.15s, color 0.15s;
+      border: 1px solid #dcd8d0; border-radius: 5px;
+      background: #faf8f4; font-size: 12px; cursor: pointer;
+      color: #555048; transition: background 0.15s, color 0.15s;
     }
-    .page-btn:hover:not(:disabled) { background: #f3f4f6; }
-    .page-btn.active { background: #6366f1; color: #fff; border-color: #6366f1; cursor: default; }
+    .page-btn:hover:not(:disabled) { background: #eeeae2; }
+    .page-btn.active { background: #0d0d0d; color: #faf8f4; border-color: #0d0d0d; cursor: default; }
     .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
     /* ── Admin full-page view ── */
     #adminView {
       width: 100%; height: 100vh;
       display: flex; flex-direction: column;
-      background: #f8f9fc; overflow: hidden;
+      background: #f0ece4; overflow: hidden;
     }
     #adminView.hidden { display: none; }
     .admin-topbar {
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 24px; height: 52px; flex-shrink: 0;
-      background: #fff; border-bottom: 1px solid #e5e7eb;
+      background: #faf8f4; border-bottom: 1px solid #dcd8d0;
     }
     .admin-topbar-left { display: flex; align-items: center; gap: 10px; }
-    .admin-topbar-title { font-size: 14px; font-weight: 700; color: #111827; }
+    .admin-topbar-title { font-size: 14px; font-weight: 700; color: #0d0d0d; }
     .admin-topbar-badge {
       font-size: 10px; font-weight: 600; padding: 2px 8px;
-      background: #ede9fe; color: #7c3aed; border-radius: 10px;
+      background: #eeeae2; color: #555048; border-radius: 10px;
     }
     .admin-topbar-right { display: flex; align-items: center; gap: 12px; }
     .admin-layout {
@@ -463,18 +766,18 @@
     }
     .admin-nav {
       width: 200px; flex-shrink: 0;
-      background: #fff; border-right: 1px solid #e5e7eb;
+      background: #faf8f4; border-right: 1px solid #dcd8d0;
       padding: 16px 12px; display: flex; flex-direction: column; gap: 2px;
     }
     .admin-nav-item {
       display: flex; align-items: center; gap: 10px;
       padding: 9px 12px; border-radius: 7px; cursor: pointer;
-      font-size: 13px; font-weight: 500; color: #6b7280;
+      font-size: 13px; font-weight: 500; color: #555048;
       transition: background 0.12s, color 0.12s; border: none; background: transparent;
       text-align: left; width: 100%;
     }
-    .admin-nav-item:hover { background: #f3f4f6; color: #374151; }
-    .admin-nav-item.active { background: #ede9fe; color: #6366f1; font-weight: 600; }
+    .admin-nav-item:hover { background: #eeeae2; color: #333028; }
+    .admin-nav-item.active { background: #eeeae2; color: #c0392b; font-weight: 600; }
     .admin-nav-icon { font-size: 15px; width: 18px; text-align: center; flex-shrink: 0; }
     .admin-content {
       flex: 1; overflow-y: auto; padding: 28px 32px;
@@ -483,16 +786,16 @@
     .admin-module.active { display: block; }
 
     .admin-section-title {
-      font-size: 11px; font-weight: 700; color: #6b7280;
+      font-size: 11px; font-weight: 700; color: #555048;
       text-transform: uppercase; letter-spacing: 0.8px;
-      padding-bottom: 8px; border-bottom: 1px solid #f3f4f6;
+      padding-bottom: 8px; border-bottom: 1px solid #eeeae2;
     }
     .admin-stat-card {
-      background: #f9fafb; border: 1px solid #e5e7eb;
+      background: #f8f6f2; border: 1px solid #dcd8d0;
       border-radius: 10px; padding: 14px 18px;
     }
     .admin-stat-label {
-      font-size: 11px; font-weight: 600; color: #9ca3af;
+      font-size: 11px; font-weight: 600; color: #999080;
       text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
     }
     .admin-stat-value { font-size: 26px; font-weight: 700; line-height: 1; }
@@ -500,16 +803,16 @@
     .export-wrap { position: relative; margin-left: auto; }
     .export-menu {
       display: none; position: absolute; top: calc(100% + 6px); right: 0;
-      background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+      background: #faf8f4; border: 1px solid #dcd8d0; border-radius: 8px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.1); overflow: hidden; z-index: 50; min-width: 130px;
     }
     .export-menu.open { display: block; }
     .export-item {
       display: flex; align-items: center; gap: 8px;
-      padding: 9px 14px; font-size: 13px; color: #374151; cursor: pointer;
+      padding: 9px 14px; font-size: 13px; color: #333028; cursor: pointer;
       transition: background 0.12s;
     }
-    .export-item:hover { background: #f9fafb; }
+    .export-item:hover { background: #f8f6f2; }
 
     @media (max-width: 768px) { .sidebar { display: none; } }
   </style>
@@ -522,7 +825,7 @@
       <div class="auth-logo">
         <div class="auth-logo-icon">🔍</div>
         <div>
-          <div class="auth-logo-text">JobApply Agent</div>
+          <div class="auth-logo-text">Offer Coming</div>
           <div class="auth-logo-sub"></div>
         </div>
       </div>
@@ -554,101 +857,177 @@
 
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="logo">
-        <div class="logo-icon">🔍</div>
-        <div>
-          <div class="logo-text">JobApply Agent</div>
-          <div class="logo-sub"></div>
+      <div class="logo" style="justify-content:space-between;">
+        <div style="display:flex;align-items:center;">
+          <div class="logo-text">Offer Coming</div>
         </div>
+        <button id="langToggle" onclick="toggleLang()" style="font-size:11px;font-weight:600;color:#555048;background:#eeeae2;border:1px solid #dcd8d0;border-radius:5px;padding:3px 8px;cursor:pointer;flex-shrink:0;">EN</button>
       </div>
 
       <div class="user-row">
-        <span class="user-email" id="userEmail">—</span>
-        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
-          <button id="langToggle" onclick="toggleLang()" style="font-size:11px;font-weight:600;color:#6b7280;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:4px;padding:2px 7px;cursor:pointer;">EN</button>
-          <button class="logout-btn" onclick="openChangePwd()" data-i18n="changePwdBtn"></button>
-          <button class="logout-btn" onclick="logout()" data-i18n="logoutBtn"></button>
+        <div class="user-row-top">
+          <div class="user-avatar" id="userAvatar">—</div>
+          <span class="user-email" id="userEmail">—</span>
+        </div>
+        <div class="user-actions">
+          <button class="user-action-btn" onclick="openChangePwd()" data-i18n="changePwdBtn"></button>
+          <button class="user-action-btn" onclick="logout()" data-i18n="logoutBtn"></button>
         </div>
       </div>
+
+      <div class="divider"></div>
 
       <button class="add-btn" onclick="toggleChat()">💬 Ask AI</button>
       <div style="display:flex;gap:8px;">
-        <button class="add-btn" onclick="openFeedback()" style="flex:1;background:linear-gradient(135deg,#10b981,#059669);font-size:11px;padding:8px 4px;" data-i18n="feedbackBtn"></button>
-        <button class="add-btn" onclick="openDonate()" style="flex:1;background:linear-gradient(135deg,#f59e0b,#d97706);font-size:11px;padding:8px 4px;" data-i18n="donateBtn"></button>
+        <button class="add-btn" onclick="openFeedback()" style="flex:1;background:#eeeae2;color:#555048;border:1px solid #dcd8d0;font-size:11px;padding:8px 4px;" data-i18n="feedbackBtn"></button>
+        <button class="add-btn" onclick="openDonate()" style="flex:1;background:#eeeae2;color:#555048;border:1px solid #dcd8d0;font-size:11px;padding:8px 4px;" data-i18n="donateBtn"></button>
       </div>
 
       <div class="divider"></div>
 
-      <div>
-        <div class="section-title" data-i18n="sectionOverview"></div>
-        <div class="stat-row">
-          <div class="stat-card">
-            <div class="stat-value" id="val-total">—</div>
-            <div class="stat-label" data-i18n="statApplications"></div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="val-countries">—</div>
-            <div class="stat-label" data-i18n="statLocations"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div>
-        <div class="section-title" data-i18n="sectionWorkType"></div>
-        <div class="chart-block"><canvas id="chartWorktype"></canvas></div>
-      </div>
-
-      <div>
-        <div class="section-title" data-i18n="sectionTopLocations"></div>
-        <div class="chart-block countries-block"><canvas id="chartCountries"></canvas></div>
-      </div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-tab" data-tab="jdmatch" onclick="switchMainTab('jdmatch')">
+          <span class="sidebar-tab-icon">文</span><span data-i18n="tabJdMatchShort"></span>
+        </button>
+        <button class="sidebar-tab active" data-tab="tracker" onclick="switchMainTab('tracker')">
+          <span class="sidebar-tab-icon">录</span><span data-i18n="tabTrackerShort"></span>
+        </button>
+        <button class="sidebar-tab" data-tab="fate" onclick="switchMainTab('fate')">
+          <span class="sidebar-tab-icon">签</span><span data-i18n="tabFateShort"></span>
+        </button>
+      </nav>
 
     </aside>
 
     <!-- Main -->
     <main class="main">
-      <div style="padding:14px 24px 0;flex-shrink:0;display:flex;gap:10px;align-items:center;">
-        <button class="ask-ai-btn" onclick="triggerAutoParseModal()" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);" data-i18n="autoParseBtn"></button>
-        <button class="ask-ai-btn" onclick="openModal()" id="addAppBtn" data-i18n="addBtn"></button>
-        <input class="search-input" id="searchInput" type="text" data-i18n-placeholder="searchPlaceholder" oninput="filterApplications()">
-        <div class="export-wrap">
-          <button class="ask-ai-btn" onclick="toggleExportMenu(event)" style="background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;" data-i18n="downloadBtn"></button>
-          <div class="export-menu" id="exportMenu">
-            <div class="export-item" onclick="downloadCSV(); closeExportMenu()">📄 CSV</div>
-            <div class="export-item" onclick="downloadPDF(); closeExportMenu()">📑 PDF</div>
+
+      <!-- Tab: Applications tracker -->
+      <div id="tab-tracker" class="main-tab-content active" style="flex-direction:column;">
+        <div style="padding:14px 24px 0;flex-shrink:0;display:flex;gap:10px;align-items:center;">
+          <button class="ask-ai-btn" onclick="triggerAutoParseModal()" data-i18n="autoParseBtn"></button>
+          <button class="ask-ai-btn" onclick="openModal()" id="addAppBtn" data-i18n="addBtn"></button>
+          <input class="search-input" id="searchInput" type="text" data-i18n-placeholder="searchPlaceholder" oninput="filterApplications()">
+          <div class="export-wrap">
+            <button class="ask-ai-btn" onclick="toggleExportMenu(event)" style="background:#eeeae2;color:#0d0d0d;border:1px solid #dcd8d0;" data-i18n="downloadBtn"></button>
+            <div class="export-menu" id="exportMenu">
+              <div class="export-item" onclick="downloadCSV(); closeExportMenu()">📄 CSV</div>
+              <div class="export-item" onclick="downloadPDF(); closeExportMenu()">📑 PDF</div>
+            </div>
           </div>
         </div>
+
+        <!-- Table header -->
+        <div class="list-header">
+          <span class="col-num"></span>
+          <span style="flex:0 0 48px" data-i18n="colLink"></span>
+          <span style="flex:0 0 116px;cursor:pointer;user-select:none;" onclick="toggleSort()" id="sortHeader"><span data-i18n="colDate"></span> <span id="sortIcon">↓</span></span>
+          <span style="flex:2;min-width:0" data-i18n="colCompany"></span>
+          <span style="flex:2;min-width:0" data-i18n="colPosition"></span>
+          <span style="flex:1;min-width:0" data-i18n="colLocation"></span>
+          <span style="flex:0 0 90px" data-i18n="colWorkType"></span>
+          <span style="flex:0 0 90px" data-i18n="colFeedback"></span>
+          <span style="width:36px;flex-shrink:0;font-size:12px;font-weight:600;color:#888070;text-transform:uppercase;letter-spacing:0.5px;" data-i18n="colNotes"></span>
+          <span style="width:26px;flex-shrink:0"></span>
+        </div>
+
+        <!-- Applications list -->
+        <div class="list-area" id="listArea">
+          <div style="color:#888070;font-size:13px;text-align:center;padding:40px 0;" id="listLoading" data-i18n="loading"></div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination" style="padding:8px 24px 12px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:40px;"></div>
       </div>
 
-      <!-- Table header -->
-      <div class="list-header">
-        <span style="flex:0 0 48px" data-i18n="colLink"></span>
-        <span style="flex:0 0 116px;cursor:pointer;user-select:none;" onclick="toggleSort()" id="sortHeader"><span data-i18n="colDate"></span> <span id="sortIcon">↓</span></span>
-        <span style="flex:2;min-width:0" data-i18n="colCompany"></span>
-        <span style="flex:2;min-width:0" data-i18n="colPosition"></span>
-        <span style="flex:1;min-width:0" data-i18n="colLocation"></span>
-        <span style="flex:0 0 90px" data-i18n="colWorkType"></span>
-        <span style="flex:0 0 90px" data-i18n="colFeedback"></span>
-        <span style="width:36px;flex-shrink:0;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;" data-i18n="colNotes"></span>
-        <span style="width:26px;flex-shrink:0"></span>
+      <!-- Tab: JD Match -->
+      <div id="tab-jdmatch" class="main-tab-content" style="flex-direction:column;">
+
+        <!-- Inputs (collapsible) -->
+        <div id="jdInputPanel" style="display:flex;gap:20px;padding:20px 24px 12px;min-width:0;">
+
+          <!-- Left: resume -->
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
+            <div class="jd-col-label" data-i18n="jdLabelResume"></div>
+            <div class="jd-save-row" style="flex-shrink:0;">
+              <button class="jd-sm-btn" onclick="document.getElementById('jdResumeFile').click()" data-i18n="resumeUploadBtn"></button>
+              <button class="jd-sm-btn" onclick="clearResume()" data-i18n="jdClearResumeBtn"></button>
+              <input type="file" id="jdResumeFile" accept=".pdf,.txt,.md" style="display:none" onchange="handleResumeUpload(this)">
+              <span id="jdResumeFileName" style="font-size:11px;color:#888070;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+            </div>
+            <textarea class="jd-textarea" id="jdResume" rows="14" style="resize:vertical;" data-i18n-placeholder="jdResumePlaceholder" oninput="autoSaveResume()"></textarea>
+          </div>
+
+          <!-- Right: JD -->
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
+            <div class="jd-col-label" data-i18n="jdLabelJD"></div>
+            <div class="jd-save-row" style="flex-shrink:0;">
+              <button class="jd-sm-btn" onclick="document.getElementById('jdJDFile').click()" data-i18n="resumeUploadBtn"></button>
+              <input type="file" id="jdJDFile" accept=".pdf,.txt,.md" style="display:none" onchange="handleJDUpload(this)">
+              <span id="jdJDFileName" style="font-size:11px;color:#888070;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+              <button class="jd-sm-btn" onclick="clearJD()" data-i18n="jdClearResumeBtn"></button>
+            </div>
+            <textarea class="jd-textarea" id="jdJD" rows="14" style="resize:vertical;" data-i18n-placeholder="jdJDPlaceholder" oninput="autoSaveJD()"></textarea>
+          </div>
+
+        </div>
+
+        <!-- Analyze button -->
+        <div id="jdAnalyzeBtnWrap" style="padding:0 24px 16px;flex-shrink:0;">
+          <button class="jd-analyze-btn" id="jdAnalyzeBtn" onclick="analyzeMatch()" data-i18n="jdAnalyzeBtn" style="width:100%;"></button>
+        </div>
+
+        <!-- Status bar (visible when inputs collapsed) -->
+        <div id="jdStatusBar" class="jd-status-bar" style="display:none;">
+          <div class="jd-status-items">
+            <div class="jd-status-item"><span class="jd-status-dot"></span><span data-i18n="jdStatusResume"></span></div>
+            <div class="jd-status-item"><span class="jd-status-dot"></span><span data-i18n="jdStatusJD"></span></div>
+          </div>
+          <button class="jd-sm-btn" onclick="toggleJdInput()" id="jdToggleBtn" data-i18n="jdExpandInputs"></button>
+        </div>
+
+        <!-- Result -->
+        <div id="jdResultSection" style="display:none;padding:20px 24px 32px;flex:1;overflow-y:auto;">
+          <div id="jdResultBox"></div>
+
+          <!-- Resume optimization (appears after match analysis) -->
+          <div id="jdOptWrap" style="display:none;margin-top:8px;">
+            <div style="border-top:2px solid #dcd8d0;margin:28px 0 20px;"></div>
+            <button class="jd-analyze-btn" id="jdOptBtn" onclick="optimizeResume()" data-i18n="resumeOptBtn" style="width:100%;margin-bottom:20px;"></button>
+            <div id="jdOptResultBox" class="md-result"></div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Applications list -->
-      <div class="list-area" id="listArea">
-        <div style="color:#9ca3af;font-size:13px;text-align:center;padding:40px 0;" id="listLoading" data-i18n="loading"></div>
+      <!-- Tab: Fate -->
+      <div id="tab-fate" class="main-tab-content" style="flex-direction:column;">
+
+        <!-- Selector -->
+        <div style="padding:24px 24px 12px;flex-shrink:0;display:flex;gap:12px;align-items:center;">
+          <select id="fateAppSelect" class="fate-select"></select>
+          <button class="jd-analyze-btn" id="fateDrawBtn" onclick="drawFateCards()" style="flex-shrink:0;padding:8px 20px;font-size:13px;">
+            ✦ <span data-i18n="fateDrawBtn"></span>
+          </button>
+        </div>
+        <div id="fateHint" style="padding:0 24px 8px;font-size:12px;color:#888070;font-style:italic;flex-shrink:0;"></div>
+
+        <!-- Cards -->
+        <div id="fateCardsArea" style="flex:1;display:flex;align-items:flex-end;justify-content:center;padding:20px 24px 80px;gap:28px;">
+          <div style="color:#aaa090;font-size:13px;text-align:center;padding-bottom:40px;">
+            <div style="font-size:52px;margin-bottom:14px;opacity:0.5;">🔮</div>
+            <div data-i18n="fateEmptyHint"></div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Pagination -->
-      <div id="pagination" style="padding:8px 24px 12px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:40px;"></div>
-
-      <!-- Chat overlay -->
+      <!-- Chat overlay (covers full .main regardless of active tab) -->
       <aside class="chat-sidebar hidden" id="chatSidebar">
         <div class="chat-topbar">
           <span class="chat-topbar-title" data-i18n="chatTitle"></span>
           <div class="chat-topbar-actions">
-            <button id="chatClearBtn" onclick="clearChat()" style="padding:4px 10px;border:1px solid #e5e7eb;border-radius:5px;background:#fff;font-size:12px;color:#6b7280;cursor:pointer;transition:background 0.15s,color 0.15s;" onmouseover="this.style.background='#fee2e2';this.style.color='#dc2626'" onmouseout="this.style.background='#fff';this.style.color='#6b7280'" data-i18n="chatClear"></button>
+            <button id="chatClearBtn" onclick="clearChat()" style="padding:4px 10px;border:1px solid #dcd8d0;border-radius:5px;background:#faf8f4;font-size:12px;color:#555048;cursor:pointer;transition:background 0.15s,color 0.15s;" onmouseover="this.style.background='#fee2e2';this.style.color='#dc2626'" onmouseout="this.style.background='#fff';this.style.color='#555048'" data-i18n="chatClear"></button>
             <button class="chat-icon-btn" onclick="toggleChat()" data-i18n-title="chatClose">✕</button>
           </div>
         </div>
@@ -675,13 +1054,13 @@
   <div id="adminView" class="hidden">
     <div class="admin-topbar">
       <div class="admin-topbar-left">
-        <div style="width:30px;height:30px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;">🔍</div>
-        <span class="admin-topbar-title">JobApply Agent</span>
+        <div style="width:30px;height:30px;background:#0d0d0d;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;">🔍</div>
+        <span class="admin-topbar-title">Offer Coming</span>
         <span class="admin-topbar-badge" data-i18n="adminBadge"></span>
       </div>
       <div class="admin-topbar-right">
-        <button id="langToggleAdmin" onclick="toggleLang()" style="font-size:11px;font-weight:600;color:#6b7280;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:4px;padding:2px 7px;cursor:pointer;">EN</button>
-        <span style="font-size:12px;color:#6b7280;" id="adminUserEmail">—</span>
+        <button id="langToggleAdmin" onclick="toggleLang()" style="font-size:11px;font-weight:600;color:#555048;background:#eeeae2;border:1px solid #dcd8d0;border-radius:4px;padding:2px 7px;cursor:pointer;">EN</button>
+        <span style="font-size:12px;color:#555048;" id="adminUserEmail">—</span>
         <button class="logout-btn" onclick="logout()" data-i18n="logoutBtn"></button>
       </div>
     </div>
@@ -712,15 +1091,15 @@
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px;">
             <div class="admin-stat-card">
               <div class="admin-stat-label" data-i18n="adminStatUsers"></div>
-              <div id="stat-total-users" class="admin-stat-value" style="color:#111827;">—</div>
+              <div id="stat-total-users" class="admin-stat-value" style="color:#0d0d0d;">—</div>
             </div>
             <div class="admin-stat-card">
               <div class="admin-stat-label" data-i18n="adminStatToday"></div>
-              <div id="stat-new-today" class="admin-stat-value" style="color:#6366f1;">—</div>
+              <div id="stat-new-today" class="admin-stat-value" style="color:#c0392b;">—</div>
             </div>
             <div class="admin-stat-card">
               <div class="admin-stat-label" data-i18n="adminStatFeedback"></div>
-              <div id="stat-feedback" class="admin-stat-value" style="color:#111827;">—</div>
+              <div id="stat-feedback" class="admin-stat-value" style="color:#0d0d0d;">—</div>
             </div>
             <div class="admin-stat-card">
               <div class="admin-stat-label" data-i18n="adminStatInvites"></div>
@@ -743,7 +1122,7 @@
               </tr>
             </thead>
             <tbody id="adminTableBody">
-              <tr><td colspan="5" style="color:#9ca3af;text-align:center;padding:24px" data-i18n="loading"></td></tr>
+              <tr><td colspan="5" style="color:#999080;text-align:center;padding:24px" data-i18n="loading"></td></tr>
             </tbody>
           </table>
         </div>
@@ -752,9 +1131,9 @@
         <div id="module-invites" class="admin-module">
           <div style="display:flex;align-items:center;justify-content:space-between;">
             <div class="admin-section-title" data-i18n="adminTabInvites"></div>
-            <button class="admin-action-btn" style="background:#6366f1;color:#fff;border-color:#6366f1" onclick="createInviteCode()" data-i18n="adminInviteGenerate"></button>
+            <button class="admin-action-btn" style="background:#c0392b;color:#fff;border-color:#c0392b" onclick="createInviteCode()" data-i18n="adminInviteGenerate"></button>
           </div>
-          <p style="font-size:12px;color:#9ca3af;margin:6px 0 14px;" data-i18n="adminInviteHint"></p>
+          <p style="font-size:12px;color:#999080;margin:6px 0 14px;" data-i18n="adminInviteHint"></p>
           <table class="admin-table">
             <thead>
               <tr>
@@ -766,7 +1145,7 @@
               </tr>
             </thead>
             <tbody id="inviteTableBody">
-              <tr><td colspan="5" style="color:#9ca3af;text-align:center;padding:24px" data-i18n="loading"></td></tr>
+              <tr><td colspan="5" style="color:#999080;text-align:center;padding:24px" data-i18n="loading"></td></tr>
             </tbody>
           </table>
         </div>
@@ -783,7 +1162,7 @@
               </tr>
             </thead>
             <tbody id="feedbackTableBody">
-              <tr><td colspan="3" style="color:#9ca3af;text-align:center;padding:24px" data-i18n="loading"></td></tr>
+              <tr><td colspan="3" style="color:#999080;text-align:center;padding:24px" data-i18n="loading"></td></tr>
             </tbody>
           </table>
         </div>
@@ -796,7 +1175,7 @@
   <div class="modal-overlay" id="donateOverlay">
     <div class="modal" style="width:440px;text-align:center;">
       <h2 data-i18n="donateTitle"></h2>
-      <p style="font-size:13px;color:#6b7280;margin:0 0 20px;" data-i18n="donateSub"></p>
+      <p style="font-size:13px;color:#555048;margin:0 0 20px;" data-i18n="donateSub"></p>
       <div style="display:flex;gap:16px;justify-content:center;margin-bottom:20px;">
         <div style="flex:1;border-radius:12px;overflow:hidden;">
           <img id="qr-alipay" src="alipay.JPG" alt="支付宝收款码" style="width:100%;display:block;border-radius:12px;">
@@ -805,7 +1184,7 @@
           <img id="qr-wechat" src="wechat.JPG" alt="微信收款码" style="width:100%;display:block;border-radius:12px;">
         </div>
       </div>
-      <p style="font-size:12px;color:#9ca3af;margin-bottom:16px;" data-i18n="donateThanks"></p>
+      <p style="font-size:12px;color:#999080;margin-bottom:16px;" data-i18n="donateThanks"></p>
       <button class="btn-cancel" style="width:100%" onclick="document.getElementById('donateOverlay').classList.remove('open')" data-i18n="btnCancel"></button>
     </div>
   </div>
@@ -819,8 +1198,8 @@
         <div class="form-row">
           <label data-i18n="feedbackLabelContent"></label>
           <textarea id="f-feedback-content" rows="5"
-            style="padding:9px 12px;border:1px solid #e5e7eb;border-radius:7px;font-size:13px;color:#111827;outline:none;resize:vertical;font-family:inherit;line-height:1.5;transition:border-color 0.15s;"
-            onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#e5e7eb'"
+            style="padding:9px 12px;border:1px solid #dcd8d0;border-radius:7px;font-size:13px;color:#0d0d0d;outline:none;resize:vertical;font-family:inherit;line-height:1.5;transition:border-color 0.15s;"
+            onfocus="this.style.borderColor='#c0392b'" onblur="this.style.borderColor='#dcd8d0'"
             data-i18n-placeholder="feedbackPlaceholder"></textarea>
         </div>
         <div class="form-actions">
@@ -836,7 +1215,7 @@
     <div class="modal">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
         <h2 id="modalTitle" data-i18n="modalTitleAdd" style="margin:0"></h2>
-        <button onclick="closeModal()" style="background:none;border:none;font-size:20px;color:#9ca3af;cursor:pointer;line-height:1;padding:0 2px;" title="关闭">×</button>
+        <button onclick="closeModal()" style="background:none;border:none;font-size:20px;color:#999080;cursor:pointer;line-height:1;padding:0 2px;" title="关闭">×</button>
       </div>
       <input type="file" id="imgFileInputModal" accept="image/*" style="display:none" onchange="parseImageForForm(this)">
       <div id="imgParseArea" class="img-parse-area" onclick="document.getElementById('imgFileInputModal').click()" style="display:none">
@@ -890,7 +1269,7 @@
       </div>
       <div class="form-row">
         <label data-i18n="labelNotes"></label>
-        <textarea id="f-notes" rows="3" data-i18n-placeholder="phNotes" style="resize:vertical;font-size:13px;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;width:100%;box-sizing:border-box;font-family:inherit;color:#111827;"></textarea>
+        <textarea id="f-notes" rows="3" data-i18n-placeholder="phNotes" style="resize:vertical;font-size:13px;padding:8px 10px;border:1px solid #dcd8d0;border-radius:8px;width:100%;box-sizing:border-box;font-family:inherit;color:#0d0d0d;"></textarea>
       </div>
       <div class="form-actions">
         <button class="btn-cancel" onclick="closeModal()" data-i18n="btnCancel"></button>
@@ -1082,6 +1461,53 @@ const LANGS = {
     adminFeedbackColContent:'反馈内容',
     adminFeedbackColDate:  '提交时间',
     adminNoFeedback:       '暂无反馈',
+
+    tabTracker:            '📋 投递记录',
+    tabJdMatch:            '🎯 简历优化',
+    tabTrackerShort:       '投递记录',
+    tabJdMatchShort:       '简历优化',
+    tabResumeShort:        '简历优化',
+    resumeOptBtn:          '开始优化简历',
+    resumeOptResultLabel:  '优化建议',
+    resumeOptEmptyHint:    '粘贴简历，点击"开始优化"获取专业建议',
+    jdLabelResume:         '我的简历',
+    jdResumePlaceholder:   '粘贴你的简历内容（工作经历、技能、教育背景等）...',
+    jdResumeSavedOk:       '✓ 已保存到本地',
+    jdSaveResumeBtn:       '保存简历',
+    jdClearResumeBtn:      '清空',
+    resumeUploadBtn:       '上传文件',
+    resumeUploading:       '解析中...',
+    resumeUploadErr:       '解析失败，请手动粘贴',
+    jdLabelJD:             '职位描述',
+    jdJDPlaceholder:       '粘贴招聘 JD 内容...',
+    jdAnalyzeBtn:          '开始分析',
+    jdAnalyzing:           '分析中...',
+    jdLabelResult:         '分析结果',
+    jdCopyResult:          '复制结果',
+    jdCopied:              '已复制',
+    jdEmptyHint:           '粘贴简历和 JD，点击"开始分析"查看匹配报告',
+    jdRequired:            '请填写简历和职位描述',
+    jdAnalyzeFailed:       '分析失败，请重试',
+    jdExpandInputs:        '编辑输入',
+    jdCollapseInputs:      '收起',
+    jdStatusResume:        '简历已填入',
+    jdStatusJD:            '职位已填入',
+    jdSkillsMatched:       '匹配的部分',
+    jdSkillsMissing:       '明显缺口',
+    jdScoreLabel:          '匹配度',
+    jdConclusion:          '结论',
+    jdColJD:               'JD要求',
+    jdColYou:              '你的情况',
+    jdColIssue:            '差距说明',
+    tabFateShort:          '命运选择',
+    fateSelectApp:         '选择一条申请记录',
+    fateDrawBtn:           '抽牌',
+    fateDrawing:           '占卜中...',
+    fateChooseHint:        '选择一张牌，揭示你与这份工作的命运',
+    fateChosenHint:        '命运已定 ✦',
+    fateNoApps:            '暂无申请记录',
+    fateSelectFirst:       '请先选择一条申请记录',
+    fateEmptyHint:         '选择一条申请记录，开始占卜',
   },
   en: {
     authTitleLogin:        'Sign In',
@@ -1257,6 +1683,53 @@ const LANGS = {
     adminFeedbackColContent:'Content',
     adminFeedbackColDate:  'Submitted',
     adminNoFeedback:       'No feedback yet',
+
+    tabTracker:            '📋 Applications',
+    tabJdMatch:            '🎯 Resume',
+    tabTrackerShort:       'Applications',
+    tabJdMatchShort:       'Resume',
+    tabResumeShort:        'Resume Polish',
+    resumeOptBtn:          'Polish Resume',
+    resumeOptResultLabel:  'Suggestions',
+    resumeOptEmptyHint:    'Paste your resume and click "Polish Resume"',
+    jdLabelResume:         'My Resume',
+    jdResumePlaceholder:   'Paste your resume here (work experience, skills, education, etc.)...',
+    jdResumeSavedOk:       '✓ Saved locally',
+    jdSaveResumeBtn:       'Save Resume',
+    jdClearResumeBtn:      'Clear',
+    resumeUploadBtn:       'Upload',
+    resumeUploading:       'Parsing...',
+    resumeUploadErr:       'Parse failed, please paste manually',
+    jdLabelJD:             'Job Description',
+    jdJDPlaceholder:       'Paste the job description here...',
+    jdAnalyzeBtn:          'Analyze',
+    jdAnalyzing:           'Analyzing...',
+    jdLabelResult:         'Analysis Result',
+    jdCopyResult:          'Copy Result',
+    jdCopied:              'Copied',
+    jdEmptyHint:           'Paste your resume and JD, then click "Analyze Match"',
+    jdRequired:            'Please fill in both resume and job description',
+    jdAnalyzeFailed:       'Analysis failed. Please try again',
+    jdExpandInputs:        'Edit inputs',
+    jdCollapseInputs:      'Collapse',
+    jdStatusResume:        'Resume filled',
+    jdStatusJD:            'JD filled',
+    jdSkillsMatched:       'Matched',
+    jdSkillsMissing:       'Clear gaps',
+    jdScoreLabel:          'Match score',
+    jdConclusion:          'Verdict',
+    jdColJD:               'JD Requirement',
+    jdColYou:              'Your Situation',
+    jdColIssue:            'Gap',
+    tabFateShort:          'Fate',
+    fateSelectApp:         'Select an application',
+    fateDrawBtn:           'Draw',
+    fateDrawing:           'Divining...',
+    fateChooseHint:        'Choose a card to reveal your fate with this role',
+    fateChosenHint:        'Fate is sealed ✦',
+    fateNoApps:            'No applications yet',
+    fateSelectFirst:       'Please select an application first',
+    fateEmptyHint:         'Select an application to begin your reading',
   }
 };
 
@@ -1345,8 +1818,11 @@ function showApp() {
   } else {
     document.getElementById('adminView').classList.add('hidden');
     document.getElementById('appWrapper').classList.remove('hidden');
-    document.getElementById('userEmail').textContent = getEmail() || '—';
+    const email = getEmail() || '—';
+    document.getElementById('userEmail').textContent = email;
+    document.getElementById('userAvatar').textContent = email[0].toUpperCase();
     loadAll();
+    loadSavedResume();
   }
 }
 
@@ -1447,18 +1923,20 @@ const WORKTYPE_KEY = { Remote: 'optRemote', Onsite: 'optOnsite', Hybrid: 'optHyb
 function badgeHtml(feedback) {
   const key = FEEDBACK_KEY[feedback] || (!feedback || feedback === 'No Response' ? 'fbOptNoResponse' : null);
   const label = key ? t(key) : esc(feedback);
-  return `<span style="font-size:12px;color:#6b7280;">${label}</span>`;
+  const cls = { 'Offer': 'badge-offer', 'Fail': 'badge-fail', 'Interview': 'badge-interview', 'Online Assessment': 'badge-oa' }[feedback] || 'badge-pending';
+  return `<span class="app-badge ${cls}">${label}</span>`;
 }
 
-function cardHtml(app, isNew = false) {
+function cardHtml(app, isNew = false, num = 0) {
   appCache.set(app.id, app);
   const date = app.applied_date ? app.applied_date.slice(0,10) : '—';
   const safeLink = app.link && /^https?:\/\//i.test(app.link);
   const linkHtml = safeLink
     ? `<a href="${esc(app.link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:14px;">↗</a>`
-    : '<span style="font-size:12px;color:#d1d5db;">—</span>';
+    : '<span style="font-size:12px;color:#dcd8d0;">—</span>';
   return `
-    <div class="app-card ${isNew ? 'new-card' : ''}" onclick="openEdit(${app.id})" style="cursor:pointer;">
+    <div class="app-card ${isNew ? 'new-card' : ''}" data-feedback="${esc(app.feedback || '')}" onclick="openEdit(${app.id})" style="cursor:pointer;">
+      <span class="col-num">${num || ''}</span>
       <span class="col-link">${linkHtml}</span>
       <span class="col-date">${date}</span>
       <span class="col-company">${esc(app.company) || '—'}</span>
@@ -1595,12 +2073,12 @@ function renderPage() {
   const area = document.getElementById('listArea');
   if (filteredApps.length === 0) {
     const q = (document.getElementById('searchInput')?.value || '').trim();
-    area.innerHTML = `<div style="color:#9ca3af;font-size:13px;text-align:center;padding:40px 0;">${q ? t('noMatch') : t('noRecords')}</div>`;
+    area.innerHTML = `<div style="color:#999080;font-size:13px;text-align:center;padding:40px 0;">${q ? t('noMatch') : t('noRecords')}</div>`;
     document.getElementById('pagination').innerHTML = '';
     return;
   }
   const start = (currentPage - 1) * PAGE_SIZE;
-  area.innerHTML = filteredApps.slice(start, start + PAGE_SIZE).map(a => cardHtml(a)).join('');
+  area.innerHTML = filteredApps.slice(start, start + PAGE_SIZE).map((a, i) => cardHtml(a, false, start + i + 1)).join('');
   renderPagination();
 }
 
@@ -1624,12 +2102,12 @@ function renderPagination() {
 
   const pageButtons = pages.map(p =>
     p === '…'
-      ? `<span style="color:#9ca3af;padding:0 2px;font-size:12px">···</span>`
+      ? `<span style="color:#999080;padding:0 2px;font-size:12px">···</span>`
       : `<button class="page-btn${p === currentPage ? ' active' : ''}" onclick="goToPage(${p})">${p}</button>`
   ).join('');
 
   el.innerHTML = `
-    <span style="font-size:12px;color:#9ca3af">${t('paginationInfo', start, end, total)}</span>
+    <span style="font-size:12px;color:#999080">${t('paginationInfo', start, end, total)}</span>
     <div style="display:flex;align-items:center;gap:4px">
       <button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>‹</button>
       ${pageButtons}
@@ -1664,9 +2142,9 @@ async function loadWorktypeChart() {
     type: 'doughnut',
     data: {
       labels: ['Remote', 'Onsite', 'Hybrid'],
-      datasets: [{ data: [d.remote, d.onsite, d.hybrid], backgroundColor: ['#6366f1','#10b981','#f59e0b'], borderWidth: 0, hoverOffset: 4 }]
+      datasets: [{ data: [d.remote, d.onsite, d.hybrid], backgroundColor: ['#c0392b','#10b981','#f59e0b'], borderWidth: 0, hoverOffset: 4 }]
     },
-    options: { plugins: { legend: { position:'bottom', labels:{ font:{size:11}, color:'#6b7280', boxWidth:12 } } }, cutout:'65%' }
+    options: { plugins: { legend: { position:'bottom', labels:{ font:{size:11}, color:'#555048', boxWidth:12 } } }, cutout:'65%' }
   });
 }
 
@@ -1679,15 +2157,15 @@ async function loadCountriesChart() {
     type: 'bar',
     data: {
       labels: data.map(d => d.location),
-      datasets: [{ data: data.map(d => d.count), backgroundColor:'#6366f1', borderRadius:4, borderSkipped:false }]
+      datasets: [{ data: data.map(d => d.count), backgroundColor:'#c0392b', borderRadius:4, borderSkipped:false }]
     },
     options: {
       indexAxis: 'y',
       maintainAspectRatio: false,
       plugins: { legend: { display:false } },
       scales: {
-        x: { grid:{display:false}, ticks:{font:{size:10}, color:'#9ca3af'} },
-        y: { grid:{display:false}, ticks:{font:{size:10}, color:'#374151'} }
+        x: { grid:{display:false}, ticks:{font:{size:10}, color:'#999080'} },
+        y: { grid:{display:false}, ticks:{font:{size:10}, color:'#333028'} }
       }
     }
   });
@@ -1695,9 +2173,6 @@ async function loadCountriesChart() {
 
 function loadAll() {
   loadApplications();
-  loadStats();
-  loadWorktypeChart();
-  loadCountriesChart();
 }
 
 function toggleChat() {
@@ -1914,9 +2389,6 @@ async function saveApplication() {
   if (res && res.ok) {
     closeModal();
     await loadApplications();
-    loadStats();
-    loadWorktypeChart();
-    loadCountriesChart();
   } else {
     alert(t('saveFailed'));
   }
@@ -1928,9 +2400,6 @@ async function deleteApplication(id) {
   if (res && res.ok) {
     appCache.delete(id);
     await loadApplications();
-    loadStats();
-    loadWorktypeChart();
-    loadCountriesChart();
   }
 }
 
@@ -1964,7 +2433,7 @@ async function refreshAdminTable() {
   const users = await res.json();
   const tbody = document.getElementById('adminTableBody');
   if (users.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="color:#9ca3af;text-align:center;padding:24px">${t('adminNoUsers')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="color:#999080;text-align:center;padding:24px">${t('adminNoUsers')}</td></tr>`;
     return;
   }
   const myEmail = getEmail();
@@ -1980,10 +2449,10 @@ async function refreshAdminTable() {
       `<button class="admin-action-btn danger" onclick="deleteUser(${u.id}, '${esc(u.email)}')">${t('adminDeleteUser')}</button>`;
     return `
       <tr id="user-row-${u.id}">
-        <td style="color:#9ca3af">${u.id}</td>
-        <td style="font-weight:500">${esc(u.email)}${isSelf ? ` <span style="font-size:10px;color:#9ca3af">${t('adminSelf')}</span>` : ''}</td>
+        <td style="color:#999080">${u.id}</td>
+        <td style="font-weight:500">${esc(u.email)}${isSelf ? ` <span style="font-size:10px;color:#999080">${t('adminSelf')}</span>` : ''}</td>
         <td>${roleBadge}</td>
-        <td style="color:#9ca3af">${date}</td>
+        <td style="color:#999080">${date}</td>
         <td>
           ${toggleBtn}
           ${deleteBtn}
@@ -2038,13 +2507,13 @@ async function refreshInviteTable() {
   const codes = await res.json();
   const tbody = document.getElementById('inviteTableBody');
   if (codes.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="color:#9ca3af;text-align:center;padding:24px">${t('adminNoInvites')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" style="color:#999080;text-align:center;padding:24px">${t('adminNoInvites')}</td></tr>`;
     return;
   }
   tbody.innerHTML = codes.map(c => {
     const used = !!c.used_by_email;
     const status = !c.is_active
-      ? `<span style="font-size:11px;color:#9ca3af">${t('inviteStatusRevoked')}</span>`
+      ? `<span style="font-size:11px;color:#999080">${t('inviteStatusRevoked')}</span>`
       : used
         ? `<span class="admin-badge-user">${t('inviteStatusUsed')}</span>`
         : `<span class="admin-badge-admin">${t('inviteStatusAvailable')}</span>`;
@@ -2052,12 +2521,12 @@ async function refreshInviteTable() {
       ? `<button class="admin-action-btn danger" onclick="revokeInvite(${c.id})">${t('adminRevoke')}</button>`
       : '—';
     return `<tr>
-      <td><code style="font-size:12px;background:#f9fafb;padding:2px 6px;border-radius:4px">${esc(c.code)}</code>
-        <button onclick="copyCode('${esc(c.code)}')" style="border:none;background:none;cursor:pointer;font-size:11px;color:#6366f1;margin-left:4px">${t('adminCopy')}</button>
+      <td><code style="font-size:12px;background:#f8f6f2;padding:2px 6px;border-radius:4px">${esc(c.code)}</code>
+        <button onclick="copyCode('${esc(c.code)}')" style="border:none;background:none;cursor:pointer;font-size:11px;color:#c0392b;margin-left:4px">${t('adminCopy')}</button>
       </td>
       <td>${status}</td>
-      <td style="font-size:12px;color:#6b7280">${c.used_by_email ? esc(c.used_by_email) : '—'}</td>
-      <td style="font-size:12px;color:#9ca3af">${c.used_at ? c.used_at.slice(0,10) : '—'}</td>
+      <td style="font-size:12px;color:#555048">${c.used_by_email ? esc(c.used_by_email) : '—'}</td>
+      <td style="font-size:12px;color:#999080">${c.used_at ? c.used_at.slice(0,10) : '—'}</td>
       <td>${revokeBtn}</td>
     </tr>`;
   }).join('');
@@ -2127,17 +2596,415 @@ async function refreshFeedbackTable() {
   const rows = await res.json();
   const tbody = document.getElementById('feedbackTableBody');
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="3" style="color:#9ca3af;text-align:center;padding:24px">${t('adminNoFeedback')}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="3" style="color:#999080;text-align:center;padding:24px">${t('adminNoFeedback')}</td></tr>`;
     return;
   }
   tbody.innerHTML = rows.map(r => {
     const date = r.created_at ? r.created_at.slice(0, 10) : '—';
     return `<tr>
-      <td style="font-size:12px;color:#6b7280;white-space:nowrap">${esc(r.email)}</td>
-      <td style="font-size:13px;color:#111827;max-width:380px;word-break:break-word">${esc(r.content)}</td>
-      <td style="font-size:12px;color:#9ca3af;white-space:nowrap">${date}</td>
+      <td style="font-size:12px;color:#555048;white-space:nowrap">${esc(r.email)}</td>
+      <td style="font-size:13px;color:#0d0d0d;max-width:380px;word-break:break-word">${esc(r.content)}</td>
+      <td style="font-size:12px;color:#999080;white-space:nowrap">${date}</td>
     </tr>`;
   }).join('');
+}
+
+// ── Main tab switching ──
+
+function switchMainTab(name) {
+  document.getElementById('chatSidebar').classList.add('hidden');
+
+  const current = document.querySelector('.main-tab-content.active');
+  const next    = document.getElementById(`tab-${name}`);
+  if (current === next) return;
+
+  document.querySelectorAll('.sidebar-tab').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.sidebar-tab[data-tab="${name}"]`).classList.add('active');
+
+  if (name === 'jdmatch') loadSavedResume();
+  if (name === 'fate') populateFateSelect();
+
+  if (current) {
+    current.classList.add('tab-flip-out');
+    setTimeout(() => {
+      current.classList.remove('active', 'tab-flip-out');
+      next.classList.add('active', 'tab-flip-in');
+      setTimeout(() => next.classList.remove('tab-flip-in'), 260);
+    }, 160);
+  } else {
+    next.classList.add('active', 'tab-flip-in');
+    setTimeout(() => next.classList.remove('tab-flip-in'), 260);
+  }
+}
+
+async function optimizeResume() {
+  const resume = document.getElementById('jdResume').value.trim();
+  const jd     = document.getElementById('jdJD').value.trim();
+  if (!resume) { alert(t('jdRequired')); return; }
+
+  const btn = document.getElementById('jdOptBtn');
+  btn.disabled = true;
+  btn.textContent = t('jdAnalyzing');
+
+  const resultBox = document.getElementById('jdOptResultBox');
+  resultBox.innerHTML = `<div class="jd-loading"><span class="jd-spinner"></span>${t('jdAnalyzing')}</div>`;
+
+  const message = currentLang === 'zh'
+    ? `请作为专业求职顾问，根据以下职位描述对我的简历进行针对性优化。无论内容语言，所有分析和建议必须用中文输出。提供：\n1. 整体评分（0-100分）及主要优缺点\n2. 针对JD的逐条改进建议（措辞、量化成果、关键词匹配）\n3. 每个问题的具体改写示例\n\n【职位描述】\n${jd || '（未提供）'}\n\n【我的简历】\n${resume}`
+    : `As a professional career consultant, optimize my resume specifically for this job description. All suggestions must be in English. Provide:\n1. Overall score (0-100) with key strengths and weaknesses\n2. JD-targeted improvements (wording, quantified achievements, keyword alignment)\n3. Rewrite examples for each issue\n\n[Job Description]\n${jd || '(not provided)'}\n\n[My Resume]\n${resume}`;
+
+  try {
+    const res = await apiFetch('/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ message })
+    });
+    const data = res ? await res.json() : null;
+    const answer = data?.answer || t('jdAnalyzeFailed');
+    resultBox.innerHTML = renderMarkdown(answer);
+  } catch {
+    resultBox.innerHTML = `<span style="color:#c0392b;">${t('jdAnalyzeFailed')}</span>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = t('resumeOptBtn');
+}
+
+// ── Resume file upload ──
+
+async function handleFileUpload(file, textareaId, nameElId) {
+  const nameEl = document.getElementById(nameElId);
+  nameEl.textContent = t('resumeUploading');
+  try {
+    let text = '';
+    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+      text = await extractPdfText(file);
+    } else {
+      text = await file.text();
+    }
+    document.getElementById(textareaId).value = text.trim();
+    nameEl.textContent = file.name;
+  } catch {
+    nameEl.textContent = t('resumeUploadErr');
+  }
+}
+
+async function handleResumeUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  await handleFileUpload(file, 'jdResume', 'jdResumeFileName');
+  const text = document.getElementById('jdResume').value.trim();
+  if (text) localStorage.setItem(RESUME_STORAGE_KEY, text);
+  input.value = '';
+}
+
+async function handleJDUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  await handleFileUpload(file, 'jdJD', 'jdJDFileName');
+  const text = document.getElementById('jdJD').value.trim();
+  if (text) localStorage.setItem(JD_STORAGE_KEY, text);
+  input.value = '';
+}
+
+async function extractPdfText(file) {
+  const pdfjsLib = window['pdfjs-dist/build/pdf'];
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const pages = [];
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    pages.push(content.items.map(item => item.str).join(' '));
+  }
+  return pages.join('\n');
+}
+
+// ── JD Match ──
+
+const RESUME_STORAGE_KEY = 'jd_resume_v1';
+const JD_STORAGE_KEY     = 'jd_jd_v1';
+
+function loadSavedResume() {
+  const resume = localStorage.getItem(RESUME_STORAGE_KEY);
+  if (resume) document.getElementById('jdResume').value = resume;
+  const jd = localStorage.getItem(JD_STORAGE_KEY);
+  if (jd) document.getElementById('jdJD').value = jd;
+}
+
+let _resumeSaveTimer = null;
+function autoSaveResume() {
+  clearTimeout(_resumeSaveTimer);
+  _resumeSaveTimer = setTimeout(() => {
+    const text = document.getElementById('jdResume').value.trim();
+    if (text) localStorage.setItem(RESUME_STORAGE_KEY, text);
+    else localStorage.removeItem(RESUME_STORAGE_KEY);
+  }, 1000);
+}
+
+let _jdSaveTimer = null;
+function autoSaveJD() {
+  clearTimeout(_jdSaveTimer);
+  _jdSaveTimer = setTimeout(() => {
+    const text = document.getElementById('jdJD').value.trim();
+    if (text) localStorage.setItem(JD_STORAGE_KEY, text);
+    else localStorage.removeItem(JD_STORAGE_KEY);
+  }, 1000);
+}
+
+function clearJD() {
+  document.getElementById('jdJD').value = '';
+  document.getElementById('jdJDFileName').textContent = '';
+  localStorage.removeItem(JD_STORAGE_KEY);
+}
+
+function clearResume() {
+  localStorage.removeItem(RESUME_STORAGE_KEY);
+  document.getElementById('jdResume').value = '';
+  document.getElementById('jdResumeSavedLabel').textContent = '';
+}
+
+function copyJdResult() {
+  const text = document.getElementById('jdResultBox').innerText;
+  if (!text || document.getElementById('jdEmptyHint').style.display !== 'none') return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('jdCopyBtn');
+    const orig = btn.textContent;
+    btn.textContent = t('jdCopied');
+    setTimeout(() => { btn.textContent = orig; }, 1500);
+  });
+}
+
+function renderMarkdown(text) {
+  let html = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm,  '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm,   '<h1>$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^---$/gm, '<hr>')
+    .replace(/^[-•] (.+)$/gm, '<li>$1</li>')
+    .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
+    .replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+  return `<p>${html}</p>`;
+}
+
+function toggleJdInput() {
+  const panel      = document.getElementById('jdInputPanel');
+  const btnWrap    = document.getElementById('jdAnalyzeBtnWrap');
+  const statusBar  = document.getElementById('jdStatusBar');
+  const toggleBtn  = document.getElementById('jdToggleBtn');
+  const collapsed  = panel.style.display === 'none';
+  panel.style.display    = collapsed ? 'flex' : 'none';
+  btnWrap.style.display  = collapsed ? ''     : 'none';
+  statusBar.style.display= collapsed ? 'none' : 'flex';
+  toggleBtn.textContent  = collapsed ? t('jdCollapseInputs') : t('jdExpandInputs');
+}
+
+function scoreColor(n) {
+  if (n >= 75) return '#10b981';
+  if (n >= 50) return '#f59e0b';
+  return '#dc2626';
+}
+
+function jdTable(rows, rightKey, rightColor) {
+  const header = rightKey === 'you'
+    ? `<div style="display:flex;padding:0 0 8px;border-bottom:1px solid #dcd8d0;margin-bottom:0;">
+        <span style="flex:1;font-size:12px;font-weight:600;color:#888070;" data-i18n="jdColJD">${t('jdColJD')}</span>
+        <span style="flex:1;font-size:12px;font-weight:600;color:#888070;" data-i18n="jdColYou">${t('jdColYou')}</span>
+       </div>`
+    : `<div style="display:flex;padding:0 0 8px;border-bottom:1px solid #dcd8d0;margin-bottom:0;">
+        <span style="flex:1;font-size:12px;font-weight:600;color:#888070;" data-i18n="jdColJD">${t('jdColJD')}</span>
+        <span style="flex:1;font-size:12px;font-weight:600;color:#888070;" data-i18n="jdColIssue">${t('jdColIssue')}</span>
+       </div>`;
+  const bodyRows = rows.map(r => `
+    <div style="display:flex;padding:10px 0;border-bottom:1px solid #eeeae2;align-items:baseline;">
+      <span style="flex:1;font-size:13px;color:#0d0d0d;">${esc(r.jd || '')}</span>
+      <span style="flex:1;font-size:13px;color:${rightColor};">${rightKey === 'you' ? '✓ ' : ''}${esc(r[rightKey] || '')}</span>
+    </div>`).join('');
+  return header + bodyRows;
+}
+
+function renderJDResult(data) {
+  const color = scoreColor(data.score);
+  const matched = data.matched || [];
+  const gaps    = data.gaps    || [];
+  const total   = matched.length + gaps.length;
+  const matchPct = total ? Math.round(matched.length / total * 100) : 50;
+  const gapPct   = 100 - matchPct;
+
+  return `
+    <div class="jd-result-header result-block-in" style="animation-delay:0s;">
+      <div class="jd-score-circle" style="border-color:${color};color:${color};">
+        <span class="jd-score-num">${data.score}</span>
+        <span class="jd-score-sub">/ 100</span>
+      </div>
+      ${data.conclusion ? `<p class="jd-summary-text">${esc(data.conclusion)}</p>` : ''}
+    </div>
+    <div class="jd-divider result-block-in" style="animation-delay:0.08s;"></div>
+    ${matched.length ? `
+    <div class="result-block-in" style="margin-bottom:24px;animation-delay:0.14s;">
+      <div class="jd-skills-title" style="color:#065f46;margin-bottom:12px;">${t('jdSkillsMatched')}（约${matchPct}%）：</div>
+      ${jdTable(matched, 'you', '#059669')}
+    </div>` : ''}
+    ${gaps.length ? `
+    <div class="result-block-in" style="margin-bottom:24px;animation-delay:${matched.length ? '0.24' : '0.14'}s;">
+      <div class="jd-skills-title" style="color:#991b1b;margin-bottom:12px;">${t('jdSkillsMissing')}（约${gapPct}%）：</div>
+      ${jdTable(gaps, 'issue', '#555048')}
+    </div>` : ''}`;
+}
+
+async function analyzeMatch() {
+  const resume = document.getElementById('jdResume').value.trim();
+  const jd     = document.getElementById('jdJD').value.trim();
+  if (!resume || !jd) { alert(t('jdRequired')); return; }
+
+  const btn = document.getElementById('jdAnalyzeBtn');
+  btn.disabled = true;
+  btn.textContent = t('jdAnalyzing');
+
+  const resultBox     = document.getElementById('jdResultBox');
+  const resultSection = document.getElementById('jdResultSection');
+  resultBox.innerHTML = `<div class="jd-loading"><span class="jd-spinner"></span>${t('jdAnalyzing')}</div>`;
+  resultSection.style.display = 'block';
+
+  const message = currentLang === 'zh'
+    ? `你是资深招聘官，请分析以下职位描述和简历的匹配度。无论输入内容是何种语言，所有分析结果必须用中文输出。严格只输出JSON，不要输出任何JSON之外的内容：\n{"score":<0到100整数>,"matched":[{"jd":"<JD要求>","you":"<候选人对应情况>"},...],"gaps":[{"jd":"<JD要求>","issue":"<差距说明>"},...],"conclusion":"<2-3句结论，直接评价通过率和最大障碍>"}\n\n【职位描述】\n${jd}\n\n【我的简历】\n${resume}`
+    : `You are a senior recruiter. Analyze the match between the job description and resume. Regardless of the input language, all analysis output must be in English. Output ONLY valid JSON, no other text:\n{"score":<integer 0-100>,"matched":[{"jd":"<JD requirement>","you":"<candidate situation>"},...],"gaps":[{"jd":"<JD requirement>","issue":"<gap explanation>"},...],"conclusion":"<2-3 sentence verdict on pass rate and biggest obstacle>"}\n\n[Job Description]\n${jd}\n\n[My Resume]\n${resume}`;
+
+  try {
+    const res = await apiFetch('/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ message })
+    });
+    const data = res ? await res.json() : null;
+    const raw  = data?.answer || '';
+
+    let parsed;
+    try {
+      const cleaned = raw.trim().replace(/^```json\s*/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+      parsed = JSON.parse(cleaned);
+    } catch {
+      resultBox.innerHTML = renderMarkdown(raw || t('jdAnalyzeFailed'));
+      return;
+    }
+
+    resultBox.innerHTML = renderJDResult(parsed);
+
+    document.getElementById('jdInputPanel').style.display    = 'none';
+    document.getElementById('jdAnalyzeBtnWrap').style.display= 'none';
+    document.getElementById('jdStatusBar').style.display     = 'flex';
+    document.getElementById('jdToggleBtn').textContent       = t('jdExpandInputs');
+
+    // Reveal optimize section with flip-in
+    const optWrap = document.getElementById('jdOptWrap');
+    optWrap.style.opacity = '0';
+    optWrap.style.transform = 'perspective(700px) rotateX(-6deg) translateY(12px)';
+    optWrap.style.transition = 'none';
+    optWrap.style.display = 'block';
+    document.getElementById('jdOptResultBox').innerHTML = '';
+    const optBtn = document.getElementById('jdOptBtn');
+    optBtn.disabled = false;
+    optBtn.textContent = t('resumeOptBtn');
+    setTimeout(() => {
+      optWrap.style.transition = 'opacity 0.32s ease, transform 0.32s ease';
+      optWrap.style.opacity = '1';
+      optWrap.style.transform = 'none';
+    }, 50);
+  } catch {
+    resultBox.innerHTML = `<span style="color:#dc2626;">${t('jdAnalyzeFailed')}</span>`;
+  }
+
+  btn.disabled = false;
+  btn.textContent = t('jdAnalyzeBtn');
+}
+
+// ── Fate Tab ──
+
+let fateFlipped = false;
+
+function populateFateSelect() {
+  const select = document.getElementById('fateAppSelect');
+  if (!select) return;
+  const placeholder = `<option value="">${t('fateSelectApp')}</option>`;
+  if (!allApps.length) {
+    select.innerHTML = placeholder + `<option disabled>${t('fateNoApps')}</option>`;
+    return;
+  }
+  select.innerHTML = placeholder + allApps.map(a =>
+    `<option value="${a.id}">${esc(a.company)} — ${esc(a.position)}${a.feedback ? ' (' + t(FEEDBACK_KEY[a.feedback] || 'fbOptNoResponse') + ')' : ''}</option>`
+  ).join('');
+}
+
+async function drawFateCards() {
+  const select = document.getElementById('fateAppSelect');
+  const appId  = parseInt(select.value);
+  if (!appId) { alert(t('fateSelectFirst')); return; }
+  const app = appCache.get(appId);
+  if (!app) return;
+
+  const btn = document.getElementById('fateDrawBtn');
+  btn.disabled = true;
+  btn.innerHTML = `✦ ${t('fateDrawing')}`;
+  fateFlipped = false;
+
+  const cardsArea = document.getElementById('fateCardsArea');
+  cardsArea.innerHTML = `<div class="jd-loading"><span class="jd-spinner"></span>${t('fateDrawing')}</div>`;
+  document.getElementById('fateHint').textContent = '';
+
+  const message = currentLang === 'zh'
+    ? `你是一位神秘的命运占卜师，擅长"答案之书"风格的神谕。请针对以下求职申请，生成4条风格各异的神谕短语——每条1到3句，语气深邃、诗意、若隐若现，像塔罗牌解读一般，暗示此申请的命运走向，可以鼓励、警示或点拨。严格只输出JSON数组，不含其他任何文字：["神谕1","神谕2","神谕3","神谕4"]\n\n申请信息：${app.company} — ${app.position}（${app.location || '未知地点'}，当前状态：${app.feedback || '待回复'}）`
+    : `You are a mystical oracle. For this job application, generate 4 distinct oracle messages in the style of the Book of Answers — each 1–3 sentences, poetic and cryptic, hinting at the fate of this application. Vary the tone: one encouraging, one cautionary, one reflective, one mysterious. Output ONLY a JSON array, no other text: ["oracle1","oracle2","oracle3","oracle4"]\n\nApplication: ${app.company} — ${app.position} (${app.location || 'unknown'}, status: ${app.feedback || 'no response'})`;
+
+  let messages;
+  try {
+    const res  = await apiFetch('/analyze', { method:'POST', body: JSON.stringify({ message }) });
+    const data = res ? await res.json() : null;
+    const raw  = (data?.answer || '').trim().replace(/^```json\s*/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+    messages = JSON.parse(raw);
+    if (!Array.isArray(messages) || messages.length < 4) throw new Error();
+  } catch {
+    messages = currentLang === 'zh'
+      ? ['此门虽阖，命运之轮未曾停转。','前路迷雾重重，唯有前行方能拨云见日。','时机未到，非能力之缺。','顺势而为，答案自会在转角处显现。']
+      : ['This door closes only to open a better one.','The path is unclear — only forward reveals the light.','Timing, not talent, holds the key.','The answer waits for you just around the next bend.'];
+  }
+
+  renderFateCards(messages);
+  document.getElementById('fateHint').textContent = t('fateChooseHint');
+  btn.disabled = false;
+  btn.innerHTML = `✦ <span data-i18n="fateDrawBtn">${t('fateDrawBtn')}</span>`;
+}
+
+function renderFateCards(messages) {
+  const cardsArea = document.getElementById('fateCardsArea');
+  cardsArea.innerHTML = messages.slice(0,4).map((msg, i) => `
+    <div class="fate-card" onclick="flipFateCard(this,${i})">
+      <div class="fate-card-inner">
+        <div class="fate-card-back">
+          <div class="fate-card-back-star">✦</div>
+          <div class="fate-card-back-label">fate</div>
+        </div>
+        <div class="fate-card-front">
+          <div class="fate-card-front-icon">☽ ✦ ☾</div>
+          <div class="fate-card-message">${esc(msg)}</div>
+          <div class="fate-card-front-footer">destiny</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function flipFateCard(cardEl, index) {
+  if (fateFlipped) return;
+  fateFlipped = true;
+  cardEl.classList.add('flipped');
+  document.querySelectorAll('.fate-card').forEach((c, i) => {
+    if (i !== index) c.classList.add('faded');
+  });
+  document.getElementById('fateHint').textContent = t('fateChosenHint');
 }
 
 // ── Init ──
