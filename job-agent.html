@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Job Track Agent</title>
+  <title>Offer Coming</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
@@ -2351,7 +2351,7 @@ function downloadCSV() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `jobtrack_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `offer-coming_${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -2390,7 +2390,7 @@ function downloadPDF() {
     margin: { left: 14, right: 14 }
   });
 
-  doc.save(`jobtrack_${date}.pdf`);
+  doc.save(`offer-coming_${date}.pdf`);
 }
 
 function toggleSort() {
