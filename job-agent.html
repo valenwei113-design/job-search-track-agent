@@ -3135,10 +3135,6 @@ function switchRightTab(tab) {
   }
 }
 
-function showAnalysis() {
-  switchRightTab('analyze');
-}
-
 function renderResumeDoc(text) {
   const lines = text.split('\n');
   let html = '';
@@ -3585,10 +3581,6 @@ function loadSavedResume() {
 }
 
 let _resumeSaveTimer = null;
-function autoSaveResume() {
-  // Resume is now uploaded via file; saving happens in handleResumeUpload()
-}
-
 let _jdSaveTimer = null;
 function autoSaveJD() {
   clearTimeout(_jdSaveTimer);
@@ -3617,32 +3609,6 @@ function clearResume() {
   if (nameEl) nameEl.textContent = '';
 }
 
-function copyJdResult() {
-  const text = document.getElementById('jdResultBox').innerText;
-  if (!text || document.getElementById('jdEmptyHint').style.display !== 'none') return;
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = document.getElementById('jdCopyBtn');
-    const orig = btn.textContent;
-    btn.textContent = t('jdCopied');
-    setTimeout(() => { btn.textContent = orig; }, 1500);
-  });
-}
-
-function renderMarkdown(text) {
-  let html = text
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm,  '<h2>$1</h2>')
-    .replace(/^# (.+)$/gm,   '<h1>$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/^---$/gm, '<hr>')
-    .replace(/^[-•] (.+)$/gm, '<li>$1</li>')
-    .replace(/^(\d+)\. (.+)$/gm, '<li>$2</li>')
-    .replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`)
-    .replace(/\n{2,}/g, '</p><p>')
-    .replace(/\n/g, '<br>');
-  return `<p>${html}</p>`;
-}
 
 
 function renderJDResult(data) {
