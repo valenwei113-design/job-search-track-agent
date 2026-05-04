@@ -205,7 +205,7 @@
 ```bash
 # 1. 克隆项目
 git clone https://github.com/valenwei113-design/JobApplyAgent.git
-cd offer-coming
+cd JobApplyAgent
 
 # 2. 安装依赖
 pip install -r requirements.txt
@@ -437,7 +437,7 @@ User Browser
 ```bash
 # 1. Clone the repo
 git clone https://github.com/valenwei113-design/JobApplyAgent.git
-cd offer-coming
+cd JobApplyAgent
 
 # 2. Install dependencies
 pip install -r requirements.txt
