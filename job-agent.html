@@ -3774,7 +3774,7 @@ async function drawFateCards() {
   const select = document.getElementById('fateAppSelect');
   const appId  = parseInt(select.value);
   if (!appId) { alert(t('fateSelectFirst')); return; }
-  const app = appCache.get(appId);
+  const app = allApps.find(a => a.id === appId);
   if (!app) return;
 
   const envelope = document.getElementById('fateEnvelope');

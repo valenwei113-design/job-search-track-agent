@@ -14,10 +14,10 @@
 **项目定位**：面向求职者的 AI 全流程辅助工具，支持多用户，可小范围商用
 
 **核心功能**：
-- **主页**：登录后首屏，显示投递总数、录用/面试/待回复统计
+- **科技资讯**：登录后首屏，显示投递统计 + 聚合 AI 科技资讯（Anthropic / The Verge AI / Hacker News RSS）
 - **投递记录**：在线新增、编辑、删除申请记录；图片/截图 AI 自动识别填写；搜索、排序、分页；AI 对话查询数据
 - **简历优化**：上传简历 + JD，AI 匹配分析（含评分）；一键生成针对性简历；AI 对话精调简历；导出 Word / PDF / Markdown / TXT
-- **命运选择**：塔罗牌风格占卜，AI 对所选岗位给出玄学预言
+- **宇宙力量**：选择一条申请记录，点击信封，AI 以宇宙视角生成哲学风格来信
 - **管理员后台**：用户管理、邀请码管理、反馈查看、数据概览
 - **双语支持**：中文 / English 一键切换
 
@@ -42,8 +42,9 @@
 ```
 用户浏览器
     │
-    ├── 主页（Tab: home）
-    │       └── 前端直接统计 allApps 数据，无额外请求
+    ├── 科技资讯（Tab: home）
+    │       ├── 前端直接统计 allApps 数据，无额外请求
+    │       └── GET /rss-proxy?url=...  →  透传 RSS 源（Anthropic / The Verge / HN）
     │
     ├── 投递记录（Tab: tracker）
     │       ├── GET/POST/PUT/DELETE /applications
@@ -53,6 +54,9 @@
     ├── 简历优化（Tab: jdmatch）
     │       ├── POST /analyze      →  DeepSeek V4 Flash（匹配分析 / 简历生成）
     │       └── POST /export-resume →  python-docx / fpdf2 生成文件流
+    │
+    ├── 宇宙力量（Tab: fate）
+    │       └── POST /analyze  →  DeepSeek V4 Flash（哲学风格宇宙来信）
     │
     └── 管理员后台（adminView，仅 admin）
             └── GET/POST/DELETE /admin/*
@@ -131,8 +135,9 @@
 | DELETE | /applications/{id} | 删除申请记录 |
 | POST | /applications/parse-image | 上传图片，AI 识别并返回字段 JSON |
 | POST | /chat | AI 对话查询（每日限 50 次，每分钟限 30 次） |
-| POST | /analyze | 简历分析 / 生成（每日限 100 次，每分钟限 10 次） |
+| POST | /analyze | 简历分析 / 生成 / 宇宙来信（每日限 100 次，每分钟限 10 次） |
 | POST | /export-resume | 导出简历文件（docx / pdf） |
+| GET | /rss-proxy | RSS 代理（白名单域名透传，需登录） |
 | GET | /stats/summary | 总数、地点数 |
 | GET | /stats/countries | Top 5 投递地点 |
 | GET | /stats/worktype | 工作类型分布 |
@@ -155,10 +160,10 @@
 ## 六、前端功能
 
 - **登录 / 注册**：首次访问显示认证界面；注册需邀请码；登录后 token 存入 localStorage，30 天有效
-- **主页**：登录后默认进入；显示今日日期、欢迎语、投递总数 / 录用 / 面试 / 待回复四项统计卡
-- **简历优化**：上传或粘贴简历（PDF / TXT / MD）；上传或粘贴 JD；匹配分析（评分 + 技能匹配 / 缺口 / ATS 关键词）；一键优化简历（AI 生成针对性版本）；AI 对话精调简历内容；导出 Word / PDF / Markdown / TXT
+- **科技资讯**：登录后默认进入；显示今日日期、投递总数 / 面试中 / 录用三项统计；聚合 Anthropic、The Verge AI、Hacker News 三个 RSS 源，按时间倒序展示，点击直达原文，支持手动刷新
+- **简历优化**：上传或粘贴简历（PDF / TXT / MD）；上传或粘贴 JD；匹配分析（评分 + 技能匹配 / 缺口 / ATS 关键词）；一键优化简历（AI 生成针对性版本）；左侧面板可折叠以扩展操作区；AI 对话精调简历内容；导出 Word / PDF / Markdown / TXT
 - **投递记录**：图片 / 截图 AI 自动识别新增；手动新增；搜索、排序、分页（每页 30 条）；点击记录编辑；备注字段；AI 对话查询数据
-- **命运选择**：选择一条申请记录，抽取 4 张塔罗牌，AI 给出玄学点评
+- **宇宙力量**：选择一条申请记录，点击中央信封触发翻盖动画，AI 以宇宙视角生成 2-3 句哲学风格来信（参考古今中外哲学思想）；可重复获取
 - **管理员后台**：用户管理（删除、切换权限、重置密码）、邀请码管理、用户反馈查看、数据概览
 
 ---
@@ -170,6 +175,7 @@
 - 邀请码注册控制，一码一次
 - SQL 安全检查：仅允许 SELECT，强制 user_id 过滤，禁止访问非授权表
 - /chat 每用户每日 50 次 / 每分钟 30 次；/analyze 每用户每日 100 次 / 每分钟 10 次
+- /rss-proxy 域名白名单，仅允许指定 RSS 源，需登录才可访问
 - CORS 白名单控制
 - 全局错误日志写入 logs/error.log
 - 每日凌晨 2 点自动备份数据库，保留 7 天
@@ -246,10 +252,10 @@ open job-agent.html
 **Purpose**: An AI-powered end-to-end job search assistant with multi-user support, suitable for small-scale deployment.
 
 **Key Features**:
-- **Home**: Default landing page after login — shows total applications, offers, interviews, and pending stats
+- **Tech News**: Default landing page after login — shows application stats and aggregated AI tech news (Anthropic / The Verge AI / Hacker News RSS)
 - **Applications**: Add, edit, delete records; AI image/screenshot parsing; search, sort, paginate; AI chat to query your data
-- **Resume**: Upload resume + JD, AI match analysis (with score); one-click AI resume optimization; AI chat to refine the resume; export as Word / PDF / Markdown / TXT
-- **Fate**: Tarot-style AI reading for any job application
+- **Resume**: Upload resume + JD, AI match analysis (with score); one-click AI resume optimization; collapsible left panel; AI chat to refine the resume; export as Word / PDF / Markdown / TXT
+- **Cosmic Forces**: Select an application, click the envelope, receive a philosophical letter written from the universe's perspective
 - **Admin Panel**: User management, invite codes, feedback viewer, stats overview
 - **Bilingual**: Chinese / English toggle
 
@@ -274,8 +280,9 @@ open job-agent.html
 ```
 User Browser
     │
-    ├── Home Tab
-    │       └── Stats computed client-side from loaded data (no extra requests)
+    ├── Tech News Tab (home)
+    │       ├── Stats computed client-side from loaded data
+    │       └── GET /rss-proxy?url=...  →  proxy RSS feeds (Anthropic / The Verge / HN)
     │
     ├── Applications Tab
     │       ├── GET/POST/PUT/DELETE /applications
@@ -285,6 +292,9 @@ User Browser
     ├── Resume Tab
     │       ├── POST /analyze       →  DeepSeek V4 Flash (match analysis / resume generation)
     │       └── POST /export-resume →  python-docx / fpdf2 file stream
+    │
+    ├── Cosmic Forces Tab (fate)
+    │       └── POST /analyze  →  DeepSeek V4 Flash (philosophical cosmic letter)
     │
     └── Admin View (admin only)
             └── GET/POST/DELETE /admin/*
@@ -363,8 +373,9 @@ User Browser
 | DELETE | /applications/{id} | Delete application |
 | POST | /applications/parse-image | Upload image, AI extracts fields as JSON |
 | POST | /chat | AI chat query (50/day, 30/min per user) |
-| POST | /analyze | Resume match / generation (100/day, 10/min per user) |
+| POST | /analyze | Resume match / generation / cosmic letter (100/day, 10/min per user) |
 | POST | /export-resume | Export resume file (docx or pdf) |
+| GET | /rss-proxy | RSS proxy (allowlisted domains only, login required) |
 | GET | /stats/summary | Total applications & locations |
 | GET | /stats/countries | Top 5 locations |
 | GET | /stats/worktype | Work type distribution |
@@ -387,10 +398,10 @@ User Browser
 ## 6. Frontend Features
 
 - **Auth**: Shown on first visit; registration requires an invite code; JWT stored in localStorage for 30 days
-- **Home**: Default tab after login — today's date, welcome greeting, 4 stat cards (total / offers / interviews / pending)
-- **Resume**: Upload or paste resume (PDF / TXT / MD); upload or paste JD; match analysis with score, skill gaps, and ATS keywords; one-click AI resume optimization; AI chat to refine the output; export as Word / PDF / Markdown / TXT
+- **Tech News**: Default tab after login — today's date, 3 stat cards (total / interviews / offers); aggregated RSS feed from Anthropic, The Verge AI, and Hacker News sorted by recency; click any item to open original article; manual refresh button
+- **Resume**: Upload or paste resume (PDF / TXT / MD); upload or paste JD; match analysis with score, skill gaps, and ATS keywords; collapsible left panel for more workspace; one-click AI resume optimization; AI chat to refine the output; export as Word / PDF / Markdown / TXT
 - **Applications**: AI image/screenshot auto-fill; manual add; search, sort by date, paginate (30/page); inline edit; notes field; AI chat to query data
-- **Fate**: Select an application, draw 4 tarot cards, get an AI divination
+- **Cosmic Forces**: Select an application, click the centered envelope to trigger an opening animation; receive a 2–3 sentence philosophical letter written from the universe's perspective, drawing on philosophical traditions worldwide; repeat as desired
 - **Admin Panel**: User management (delete, toggle admin, reset password), invite code management, feedback list, stats overview
 
 ---
@@ -402,6 +413,7 @@ User Browser
 - Invite-code gated registration, one use per code
 - SQL safety: SELECT only, mandatory user_id filter, blocked unauthorized tables
 - Rate limits: /chat 50/day & 30/min; /analyze 100/day & 10/min per user
+- /rss-proxy domain allowlist, login required — cannot be used as open proxy
 - CORS allowlist
 - Global error logging to logs/error.log
 - Automated daily DB backup at 2 AM, retained for 7 days
